@@ -12,8 +12,6 @@
     "dev": "turbo run dev --ui tui",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
-    "storybook": "turbo run storybook",
-    "build-storybook": "turbo run build-storybook",
     "prepare": "husky",
     "db:seed": "bun run scripts/seed.ts",
     "docker:build": "docker build -t compooss:$(node -p \"require('./package.json').version\") --build-arg VERSION=$(node -p \"require('./package.json').version\") .",

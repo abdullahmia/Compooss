@@ -80,8 +80,6 @@ compooss/
 | `bun build` | Build all packages and apps in dependency order |
 | `bun lint` | Run ESLint across the entire monorepo |
 | `bun type-check` | Run TypeScript type checking |
-| `bun storybook` | Start Storybook for the UI package |
-| `bun build-storybook` | Build Storybook static site |
 | `bun run db:seed` | Seed local MongoDB with dummy development data |
 
 ---

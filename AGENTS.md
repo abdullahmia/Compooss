@@ -19,9 +19,6 @@ bun type-check       # TypeScript strict check
 bun run db:seed      # Seed local MongoDB with dummy data (ecommerce_dev, blog_dev, analytics_dev)
 docker compose -f docker/docker-compose.dev.yml up -d  # Start dev MongoDB only
 
-# UI development
-bun storybook        # Storybook for @compooss/ui (port 6006)
-
 # Docker
 bun run docker:build   # Build Docker image locally
 bun run docker:publish # Build and push multi-arch image

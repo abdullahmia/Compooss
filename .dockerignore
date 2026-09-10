@@ -10,7 +10,6 @@ out
 build
 dist
 *.tsbuildinfo
-storybook-static
 
 # Turbo
 .turbo
@@ -37,9 +36,6 @@ coverage
 **/__tests__
 **/*.test.*
 **/*.spec.*
-
-# Docs / Storybook (not needed for compooss app image)
-**/storybook-static
 
 # Vercel
 .vercel
