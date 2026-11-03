@@ -1,6 +1,7 @@
 "use client";
 
 import type { QueryBarValues, QueryHistoryEntry, SavedQuery } from "@compooss/types";
+import { generateId } from "@/lib/utils/generate-id.util";
 import { useCallback, useSyncExternalStore } from "react";
 
 const MAX_HISTORY = 25;
@@ -45,11 +46,6 @@ function useStoredList<T>(key: string): T[] {
     () => readList<T>(key),
     () => EMPTY_LIST,
   );
-}
-
-// Not crypto.randomUUID: that only exists on HTTPS or localhost.
-function generateId(): string {
-  return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function toValues({ filter, project, sort, limit, skip }: QueryBarValues): QueryBarValues {

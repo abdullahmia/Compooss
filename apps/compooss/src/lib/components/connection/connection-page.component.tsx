@@ -4,6 +4,7 @@ import { connectionDB } from "@/lib/storage/connection-db";
 import { useConnection } from "@/lib/providers/connection-provider";
 import { apiClient } from "@/lib/config/api.config";
 import { ENDPOINTS } from "@/lib/constants";
+import { generateId } from "@/lib/utils/generate-id.util";
 import type { SavedConnection } from "@compooss/types";
 import { ThemeSwitcher } from "@/lib/components/common/theme-switcher.component";
 import { Database, Leaf } from "lucide-react";
@@ -35,7 +36,7 @@ export const ConnectionPage: React.FC = () => {
   const handleFormSubmit = async (data: TConnectionForm) => {
     setSubmitError(null);
 
-    const id = editingConnection?.id ?? crypto.randomUUID();
+    const id = editingConnection?.id ?? generateId();
     const now = new Date().toISOString();
 
     const saved: SavedConnection = {
