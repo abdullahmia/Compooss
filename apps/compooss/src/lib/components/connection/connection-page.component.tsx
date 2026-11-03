@@ -66,7 +66,9 @@ export const ConnectionPage: React.FC = () => {
 
     if (status?.resolvedUri) {
       saved.uri = status.resolvedUri;
-      toast.info("Docker detected — saved connection using `mongo` instead of `localhost`");
+      toast.info(
+        `Docker detected — saved connection using \`${new URL(status.resolvedUri).hostname}\` instead of \`localhost\``,
+      );
     }
 
     try {

@@ -30,9 +30,11 @@ export class MongoDriver {
 
   async disconnect(): Promise<void> {
     if (this.clientPromise) {
-      const client = await this.clientPromise;
-      await client.close();
+      const clientPromise = this.clientPromise;
       this.clientPromise = null;
+      // A client whose connect() failed has already closed itself.
+      const client = await clientPromise.catch(() => null);
+      await client?.close();
     }
   }
 

@@ -2,9 +2,12 @@ import type { MongoClientOptions } from "mongodb";
 import type { ConnectionStatus, ConnectionTestResult } from "@compooss/types";
 import {
   classifyMongoError,
+  DOCKER_LOCALHOST_HINT,
   isAuthError,
+  isLoopbackUri,
+  isRunningInDocker,
   maskUri,
-  resolveDockerHost,
+  resolveDockerHostCandidates,
 } from "@/lib/utils/connection.util";
 import { MongoDriver } from "./mongodb.driver";
 
@@ -20,6 +23,46 @@ class ConnectionManager {
     return ConnectionManager._instance;
   }
 
+  /**
+   * Opens a pinged driver for `uri`. When a localhost URI is unreachable from
+   * inside Docker, retries against the Docker host aliases and returns the URI
+   * that worked. Throws an Error with a user-facing message.
+   */
+  private async openDriver(
+    uri: string,
+    options?: MongoClientOptions,
+  ): Promise<{ driver: MongoDriver; uri: string }> {
+    const driver = new MongoDriver(uri, options);
+    try {
+      await driver.ping();
+      return { driver, uri };
+    } catch (err) {
+      await driver.disconnect();
+
+      if (isAuthError(err)) {
+        throw new Error(classifyMongoError(err));
+      }
+
+      for (const fallback of await resolveDockerHostCandidates(uri)) {
+        const fallbackDriver = new MongoDriver(fallback, options);
+        try {
+          await fallbackDriver.ping();
+          return { driver: fallbackDriver, uri: fallback };
+        } catch (fallbackErr) {
+          await fallbackDriver.disconnect();
+          if (isAuthError(fallbackErr)) {
+            throw new Error(classifyMongoError(fallbackErr));
+          }
+        }
+      }
+
+      if (isRunningInDocker() && isLoopbackUri(uri)) {
+        throw new Error(`${classifyMongoError(err)} ${DOCKER_LOCALHOST_HINT}`);
+      }
+      throw new Error(classifyMongoError(err));
+    }
+  }
+
   async connect(
     uri: string,
     options?: MongoClientOptions,
@@ -28,43 +71,15 @@ class ConnectionManager {
       await this.disconnect();
     }
 
-    const driver = new MongoDriver(uri, options);
-    let resolvedUri: string | undefined;
+    const { driver, uri: connectedUri } = await this.openDriver(uri, options);
+    this.activeDriver = driver;
+    this.activeUri = connectedUri;
 
-    try {
-      await driver.ping();
-      this.activeDriver = driver;
-      this.activeUri = uri;
-    } catch (err) {
-      await driver.disconnect();
-
-      if (isAuthError(err)) {
-        throw new Error(classifyMongoError(err));
-      }
-
-      const fallback = resolveDockerHost(uri);
-      if (!fallback) {
-        throw new Error(classifyMongoError(err));
-      }
-
-      const fallbackDriver = new MongoDriver(fallback, options);
-      try {
-        await fallbackDriver.ping();
-      } catch (fallbackErr) {
-        await fallbackDriver.disconnect();
-        throw new Error(classifyMongoError(fallbackErr));
-      }
-
-      this.activeDriver = fallbackDriver;
-      this.activeUri = fallback;
-      resolvedUri = fallback;
-    }
-
-    const serverInfo = await this.activeDriver!.getServerInfo();
+    const serverInfo = await driver.getServerInfo();
     return {
       connected: true,
-      maskedUri: maskUri(this.activeUri!),
-      ...(resolvedUri && { resolvedUri }),
+      maskedUri: maskUri(connectedUri),
+      ...(connectedUri !== uri && { resolvedUri: connectedUri }),
       serverInfo,
     };
   }
@@ -81,34 +96,26 @@ class ConnectionManager {
     uri: string,
     options?: MongoClientOptions,
   ): Promise<ConnectionTestResult> {
-    const driver = new MongoDriver(uri, options);
+    let opened: { driver: MongoDriver; uri: string };
     try {
-      await driver.ping();
-      const serverInfo = await driver.getServerInfo();
-      return { ok: true, message: "Connection successful", serverInfo };
+      opened = await this.openDriver(uri, options);
     } catch (err) {
-      if (isAuthError(err)) {
-        return { ok: false, message: classifyMongoError(err) };
-      }
+      return {
+        ok: false,
+        message: err instanceof Error ? err.message : "Connection failed.",
+      };
+    }
 
-      const fallback = resolveDockerHost(uri);
-      if (!fallback) {
-        return { ok: false, message: classifyMongoError(err) };
-      }
-
-      await driver.disconnect();
-      const fallbackDriver = new MongoDriver(fallback, options);
-      try {
-        await fallbackDriver.ping();
-        const serverInfo = await fallbackDriver.getServerInfo();
-        return { ok: true, message: "Connection successful", resolvedUri: fallback, serverInfo };
-      } catch (fallbackErr) {
-        return { ok: false, message: classifyMongoError(fallbackErr) };
-      } finally {
-        await fallbackDriver.disconnect();
-      }
+    try {
+      const serverInfo = await opened.driver.getServerInfo();
+      return {
+        ok: true,
+        message: "Connection successful",
+        ...(opened.uri !== uri && { resolvedUri: opened.uri }),
+        serverInfo,
+      };
     } finally {
-      await driver.disconnect();
+      await opened.driver.disconnect();
     }
   }
 
