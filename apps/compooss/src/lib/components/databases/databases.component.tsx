@@ -1,5 +1,6 @@
 "use client";
 
+import { useConnection } from "@/lib/providers/connection-provider";
 import { useGetDatabases } from "@/lib/services/database/database.service";
 import type { Database } from "@compooss/types";
 import { isProtectedDatabase } from "@compooss/types";
@@ -11,6 +12,7 @@ import { DatabaseCard } from "./database-card.component";
 
 export const Databases: React.FC = () => {
   const { data: databases = [], isLoading, isError, error, refetch, isRefetching } = useGetDatabases();
+  const { isReadOnly } = useConnection();
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
   const { userDatabases, systemDatabases } = useMemo(() => {
@@ -36,13 +38,15 @@ export const Databases: React.FC = () => {
                 All databases on this MongoDB server
               </p>
             </div>
-            <Button
-              variant="primary"
-              icon={<Plus className="h-3.5 w-3.5" />}
-              onClick={() => setCreateModalOpen(true)}
-            >
-              Create database
-            </Button>
+            {!isReadOnly && (
+              <Button
+                variant="primary"
+                icon={<Plus className="h-3.5 w-3.5" />}
+                onClick={() => setCreateModalOpen(true)}
+              >
+                Create database
+              </Button>
+            )}
           </div>
         </div>
 
@@ -81,10 +85,14 @@ export const Databases: React.FC = () => {
               icon={<DatabaseBackupIcon className="h-12 w-12 text-muted-foreground" />}
               title="No databases yet"
               description="Create your first database to start storing collections and documents."
-              primaryAction={{
-                label: "Create database",
-                onClick: () => setCreateModalOpen(true),
-              }}
+              primaryAction={
+                isReadOnly
+                  ? undefined
+                  : {
+                      label: "Create database",
+                      onClick: () => setCreateModalOpen(true),
+                    }
+              }
             />
           ) : (
             <>

@@ -2,6 +2,7 @@ import type { DocumentRecord } from "./document";
 import type { PaginationOptions } from "./document";
 import type { IndexField } from "./index-types";
 import type { ValidationLevel, ValidationAction } from "./validation";
+import type { CreateCollectionOptions } from "./collection";
 
 export interface CreateDatabaseInput {
   /** Name of the new database */
@@ -13,6 +14,7 @@ export interface CreateDatabaseInput {
 export interface CreateCollectionInput {
   databaseName: string;
   collectionName: string;
+  options?: CreateCollectionOptions;
 }
 
 export interface DeleteCollectionInput {

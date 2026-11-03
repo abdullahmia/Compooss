@@ -6,20 +6,31 @@ import {
   DEFAULT_SKIP,
   QUERY_BAR_DEFAULT_STATE,
 } from "@/lib/constants";
-import { Braces, Play, RotateCcw, SlidersHorizontal } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { QueryHistoryPanel } from "@/lib/components/collections/query-history-panel.component";
+import { SaveQueryModal } from "@/lib/components/collections/save-query-modal.component";
+import {
+  isDefaultQuery,
+  isEmptyObjectString,
+  useQueryHistory,
+} from "@/lib/hooks/use-query-history.hook";
+import type { QueryBarValues } from "@compooss/types";
+import {
+  Bookmark,
+  Braces,
+  History,
+  Play,
+  RotateCcw,
+  SlidersHorizontal,
+} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button, IconButton, Input } from "@compooss/ui";
 
-export type QueryBarState = {
-  filter: string;
-  project: string;
-  sort: string;
-  limit: number;
-  skip: number;
-};
+export type QueryBarState = QueryBarValues;
 
 type Props = {
   onRunQuery: (state: QueryBarState) => void;
+  /** Recent and saved queries are kept per namespace, e.g. "db.collection". */
+  historyNamespace: string;
   fieldSuggestions?: string[];
   /** Optional initial state (e.g. after reset from parent) */
   initialState?: Partial<QueryBarState>;
@@ -43,6 +54,7 @@ function getSuggestions(
 
 export const QueryBar: React.FC<Props> = ({
   onRunQuery,
+  historyNamespace,
   fieldSuggestions = [],
   initialState,
 }) => {
@@ -61,6 +73,29 @@ export const QueryBar: React.FC<Props> = ({
   const filterRef = useRef<HTMLInputElement>(null);
   const projectRef = useRef<HTMLInputElement>(null);
   const sortRef = useRef<HTMLInputElement>(null);
+
+  const { history, savedQueries, recordQuery, saveQuery, deleteSavedQuery, clearHistory } =
+    useQueryHistory(historyNamespace);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [queryToSave, setQueryToSave] = useState<QueryBarValues | null>(null);
+  const historyRef = useRef<HTMLDivElement>(null);
+
+  // Close the history panel on an outside click or Escape.
+  useEffect(() => {
+    if (!historyOpen) return;
+    const handlePointerDown = (e: MouseEvent) => {
+      if (!historyRef.current?.contains(e.target as Node)) setHistoryOpen(false);
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setHistoryOpen(false);
+    };
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [historyOpen]);
 
   const updateSuggestions = useCallback(
     (
@@ -142,17 +177,45 @@ export const QueryBar: React.FC<Props> = ({
     [filter, project, sort],
   );
 
-  const runQuery = useCallback(() => {
+  const currentValues = useCallback((): QueryBarValues => {
     const limitNum = Number(limit);
     const skipNum = Number(skip);
-    onRunQuery({
+    return {
       filter: filter.trim(),
       project: project.trim(),
       sort: sort.trim(),
       limit: Number.isFinite(limitNum) && limitNum > 0 ? limitNum : DEFAULT_LIMIT,
       skip: Number.isFinite(skipNum) && skipNum >= 0 ? skipNum : DEFAULT_SKIP,
-    });
-  }, [filter, project, sort, limit, skip, onRunQuery]);
+    };
+  }, [filter, project, sort, limit, skip]);
+
+  const runQuery = useCallback(() => {
+    const values = currentValues();
+    onRunQuery(values);
+    recordQuery(values);
+  }, [currentValues, onRunQuery, recordQuery]);
+
+  /** Loads a recent or saved query into the bar and runs it. */
+  const applyQuery = useCallback(
+    (query: QueryBarValues) => {
+      setFilter(query.filter);
+      setProject(query.project);
+      setSort(query.sort);
+      setLimit(query.limit);
+      setSkip(query.skip);
+      // Reveal the options row if the query uses any of them.
+      setShowOptions(
+        !isEmptyObjectString(query.project) ||
+          !isEmptyObjectString(query.sort) ||
+          query.limit !== DEFAULT_LIMIT ||
+          query.skip > 0,
+      );
+      setHistoryOpen(false);
+      onRunQuery(query);
+      recordQuery(query);
+    },
+    [onRunQuery, recordQuery],
+  );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent, context: "filter" | "project" | "sort") => {
@@ -253,6 +316,36 @@ export const QueryBar: React.FC<Props> = ({
           label="Reset"
           onClick={handleReset}
         />
+        <IconButton
+          variant="default"
+          icon={<Bookmark className="h-3.5 w-3.5" />}
+          label="Save query"
+          onClick={() => setQueryToSave(currentValues())}
+          disabled={isDefaultQuery(currentValues())}
+        />
+        <div ref={historyRef} className="relative">
+          <IconButton
+            variant={historyOpen ? "active" : "default"}
+            icon={<History className="h-3.5 w-3.5" />}
+            label="Query history"
+            onClick={() => setHistoryOpen((open) => !open)}
+          />
+          {historyOpen && (
+            <div className="absolute right-0 top-full mt-1 z-50">
+              <QueryHistoryPanel
+                savedQueries={savedQueries}
+                history={history}
+                onApply={applyQuery}
+                onSaveRequest={(query) => {
+                  setHistoryOpen(false);
+                  setQueryToSave(query);
+                }}
+                onDeleteSaved={deleteSavedQuery}
+                onClearHistory={clearHistory}
+              />
+            </div>
+          )}
+        </div>
 
         <Button
           variant="primary"
@@ -382,6 +475,12 @@ export const QueryBar: React.FC<Props> = ({
           </div>
         </div>
       )}
+
+      <SaveQueryModal
+        query={queryToSave}
+        onSave={saveQuery}
+        onClose={() => setQueryToSave(null)}
+      />
     </div>
   );
 };

@@ -3,7 +3,9 @@
 import { Badge, ConfirmDestructiveModal, IconButton } from "@compooss/ui";
 import { SidebarCollectionSkeleton } from "./sidebar-collection-skeleton.component";
 import { CreateCollectionModal } from "@/lib/components/collections/create-collection-modal.component";
+import { RenameCollectionModal } from "@/lib/components/collections/rename-collection-modal.component";
 import { isProtectedDatabase } from "@compooss/types";
+import { useConnection } from "@/lib/providers/connection-provider";
 import { useDeleteDatabase } from "@/lib/services/database/database.service";
 import {
   useDeleteCollection,
@@ -14,11 +16,18 @@ import {
   ChevronDown,
   ChevronRight,
   DatabaseBackupIcon,
+  Pencil,
   Plus,
   Table,
   Trash2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { workspaceTabs } from "@/lib/hooks/use-workspace-tabs.hook";
+import {
+  collectionPath,
+  databaseFromPath,
+  parseCollectionPath,
+} from "@/lib/utils/collection-path.util";
 import React, { useState } from "react";
 
 type Props = {
@@ -33,12 +42,16 @@ export const SidebarItem: React.FC<Props> = ({
   onToggleExpand,
 }) => {
   const router = useRouter();
-  const isProtected = isProtectedDatabase(db.name);
+  const pathname = usePathname();
+  const activeDbName = databaseFromPath(pathname);
+  const { isReadOnly } = useConnection();
+  const isProtected = isReadOnly || isProtectedDatabase(db.name);
 
   const [deleteDbModalOpen, setDeleteDbModalOpen] = useState(false);
   const [addCollectionModalOpen, setAddCollectionModalOpen] = useState(false);
   const [collectionToDelete, setCollectionToDelete] =
     useState<Collection | null>(null);
+  const [collectionToRename, setCollectionToRename] = useState<string | null>(null);
 
   const { data: collections, isLoading: isLoadingCollections } = useGetCollections(db.name, {
     enabled: expanded,
@@ -46,16 +59,27 @@ export const SidebarItem: React.FC<Props> = ({
 
   const { mutateAsync: deleteDatabase, isPending: isDeletingDb } =
     useDeleteDatabase({
-      onSuccess: () => setDeleteDbModalOpen(false),
+      onSuccess: () => {
+        setDeleteDbModalOpen(false);
+        workspaceTabs.closeDropped(db.name);
+        if (activeDbName === db.name) router.push("/databases");
+      },
     });
 
   const { mutateAsync: deleteCollection, isPending: isDeletingCol } =
     useDeleteCollection(db.name, {
-      onSuccess: () => setCollectionToDelete(null),
+      onSuccess: (_data, collectionName) => {
+        setCollectionToDelete(null);
+        workspaceTabs.closeDropped(db.name, collectionName);
+        const viewing = parseCollectionPath(pathname);
+        if (viewing?.dbName === db.name && viewing.collectionName === collectionName) {
+          router.push(`/databases/${encodeURIComponent(db.name)}`);
+        }
+      },
     });
 
   const handleSelectCollection = (collection: Collection) => {
-    router.push(`/databases/${db.name}/collections/${collection.name}`);
+    router.push(collectionPath({ dbName: db.name, collectionName: collection.name }));
   };
 
   const handleDeleteDbClick = (e: React.MouseEvent) => {
@@ -176,16 +200,29 @@ export const SidebarItem: React.FC<Props> = ({
                     {col.documentCount.toLocaleString()}
                   </Badge>
                   {!isProtected && (
-                    <IconButton
-                      icon={<Trash2 className="h-3 w-3" />}
-                      label="Delete collection"
-                      variant="danger"
-                      size="sm"
-                      className="opacity-0 translate-x-1 group-hover/col:opacity-100 group-hover/col:translate-x-0 transition-all duration-200 ease-out shrink-0"
-                      onClick={(e: React.MouseEvent) =>
-                        handleDeleteCollectionClick(e, col)
-                      }
-                    />
+                    <>
+                      <IconButton
+                        icon={<Pencil className="h-3 w-3" />}
+                        label="Rename collection"
+                        variant="toolbar"
+                        size="sm"
+                        className="opacity-0 translate-x-1 group-hover/col:opacity-100 group-hover/col:translate-x-0 transition-all duration-200 ease-out shrink-0"
+                        onClick={(e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          setCollectionToRename(col.name);
+                        }}
+                      />
+                      <IconButton
+                        icon={<Trash2 className="h-3 w-3" />}
+                        label="Delete collection"
+                        variant="danger"
+                        size="sm"
+                        className="opacity-0 translate-x-1 group-hover/col:opacity-100 group-hover/col:translate-x-0 transition-all duration-200 ease-out shrink-0"
+                        onClick={(e: React.MouseEvent) =>
+                          handleDeleteCollectionClick(e, col)
+                        }
+                      />
+                    </>
                   )}
                 </div>
               </div>
@@ -198,6 +235,12 @@ export const SidebarItem: React.FC<Props> = ({
         open={addCollectionModalOpen}
         dbName={db.name}
         onClose={() => setAddCollectionModalOpen(false)}
+      />
+
+      <RenameCollectionModal
+        dbName={db.name}
+        collectionName={collectionToRename}
+        onClose={() => setCollectionToRename(null)}
       />
 
       <ConfirmDestructiveModal

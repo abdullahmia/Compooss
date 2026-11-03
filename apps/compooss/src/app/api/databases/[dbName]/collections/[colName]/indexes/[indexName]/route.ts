@@ -1,7 +1,8 @@
 import { isProtectedDatabase } from "@compooss/types";
 import { indexRepository } from "@/lib/core-modules/index/index.repository";
 import { createApiResponse } from "@/lib/utils/api-response.util";
-import { protectedDbResponse } from "@/lib/utils/api-route.util";
+import { isReadOnlySession } from "@/lib/utils/session.util";
+import { protectedDbResponse, readOnlyResponse } from "@/lib/utils/api-route.util";
 import { NextResponse } from "next/server";
 
 type IndexNameParams = {
@@ -13,6 +14,7 @@ export async function DELETE(_req: Request, { params }: IndexNameParams) {
     const { dbName, colName, indexName } = await params;
     const decodedName = decodeURIComponent(indexName);
     if (isProtectedDatabase(dbName)) return protectedDbResponse();
+    if (await isReadOnlySession()) return readOnlyResponse();
     const result = await indexRepository.dropIndex({
       databaseName: dbName,
       collectionName: colName,
@@ -36,6 +38,7 @@ export async function PATCH(req: Request, { params }: IndexNameParams) {
     const { dbName, colName, indexName } = await params;
     const decodedName = decodeURIComponent(indexName);
     if (isProtectedDatabase(dbName)) return protectedDbResponse();
+    if (await isReadOnlySession()) return readOnlyResponse();
     const body = await req.json();
     const hidden = Boolean(body?.hidden);
     await indexRepository.hideIndex({

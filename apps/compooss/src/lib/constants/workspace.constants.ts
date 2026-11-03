@@ -35,3 +35,8 @@ export const WORKSPACE_FEATURES = [
     borderColor: "group-hover:border-emerald-500/20",
   },
 ] as const;
+
+export const SIDEBAR_WIDTH_STORAGE_KEY = "compooss-sidebar-width";
+export const SIDEBAR_DEFAULT_WIDTH = 256;
+export const SIDEBAR_MIN_WIDTH = 200;
+export const SIDEBAR_MAX_WIDTH = 600;

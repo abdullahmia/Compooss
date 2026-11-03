@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useCollectionScope } from "@/lib/providers/collection-scope";
 import { useCallback, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useAggregationPipeline } from "@/lib/components/collections/aggregations/use-aggregation-pipeline";
@@ -14,10 +14,10 @@ import { SavePipelineModal } from "@/lib/components/collections/aggregations/sav
 import { PipelineSettingsModal } from "@/lib/components/collections/aggregations/pipeline-settings.component";
 import { CreateViewModal } from "@/lib/components/collections/aggregations/create-view-modal.component";
 
-export const AggregationsTab: React.FC = () => {
-  const params = useParams();
-  const dbName = (params?.dbName as string) ?? "";
-  const collectionName = (params?.collectionName as string) ?? "";
+type Props = { readOnly?: boolean };
+
+export const AggregationsTab: React.FC<Props> = ({ readOnly = false }) => {
+  const { dbName, collectionName } = useCollectionScope();
 
   const pipeline = useAggregationPipeline(dbName, collectionName);
 
@@ -50,7 +50,7 @@ export const AggregationsTab: React.FC = () => {
         onOpenSave={() => setSaveModalOpen(true)}
         onOpenLoad={() => setLoadModalOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
-        onOpenCreateView={() => setCreateViewOpen(true)}
+        onOpenCreateView={readOnly ? undefined : () => setCreateViewOpen(true)}
       />
 
       <PanelGroup direction="vertical" className="flex-1">

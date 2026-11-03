@@ -1,10 +1,16 @@
 import { apiClient } from "@/lib/config/api.config";
 import { ENDPOINTS } from "@/lib/constants";
-import { TCreateCollectionInput } from "@/lib/schemas";
 import { TMutationOptions, TQueryOptions } from "@/lib/query.types";
-import type { ApiResponse, Collection } from "@compooss/types";
+import type { ApiResponse, Collection, CreateCollectionOptions } from "@compooss/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { COLLECTION_QUERY_KEYS } from "./collection-query.key";
+
+export async function fetchCollections(db: string): Promise<Collection[]> {
+  const response = await apiClient.get<ApiResponse<Collection[]>>(
+    ENDPOINTS.collections.root(db),
+  );
+  return response.data ?? [];
+}
 
 export const useGetCollections = (
   db: string,
@@ -12,27 +18,27 @@ export const useGetCollections = (
 ) =>
   useQuery({
     queryKey: COLLECTION_QUERY_KEYS.list(db),
-    queryFn: async () => {
-      const response = await apiClient.get<ApiResponse<Collection[]>>(
-        ENDPOINTS.collections.root(db),
-      );
-      return response.data ?? [];
-    },
+    queryFn: () => fetchCollections(db),
     enabled: !!db,
     ...options,
   });
 
+type CreateCollectionVariables = {
+  collectionName: string;
+  options?: CreateCollectionOptions;
+};
+
 export const useCreateCollection = (
   dbName: string,
-  options: TMutationOptions<ApiResponse<Collection>, string> = {},
+  options: TMutationOptions<ApiResponse<Collection>, CreateCollectionVariables> = {},
 ) => {
   const queryClient = useQueryClient();
   return useMutation({
     ...options,
-    mutationFn: async (collectionName: string) =>
+    mutationFn: async (variables: CreateCollectionVariables) =>
       apiClient.post<ApiResponse<Collection>>(
         ENDPOINTS.collections.root(dbName),
-        { collectionName },
+        variables,
       ),
     onSuccess: (data, variables, context, mutation) => {
       queryClient.invalidateQueries({
@@ -58,6 +64,27 @@ export const useDeleteCollection = (
       queryClient.invalidateQueries({
         queryKey: COLLECTION_QUERY_KEYS.list(dbName),
       });
+      options.onSuccess?.(data, variables, context, mutation);
+    },
+  });
+};
+
+type RenameCollectionVariables = { collectionName: string; newName: string };
+
+export const useRenameCollection = (
+  dbName: string,
+  options: TMutationOptions<ApiResponse<{ name: string }>, RenameCollectionVariables> = {},
+) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    ...options,
+    mutationFn: async ({ collectionName, newName }: RenameCollectionVariables) =>
+      apiClient.patch<ApiResponse<{ name: string }>>(
+        ENDPOINTS.collections.byName(dbName, collectionName),
+        { body: { newName } },
+      ),
+    onSuccess: (data, variables, context, mutation) => {
+      queryClient.invalidateQueries({ queryKey: COLLECTION_QUERY_KEYS.list(dbName) });
       options.onSuccess?.(data, variables, context, mutation);
     },
   });

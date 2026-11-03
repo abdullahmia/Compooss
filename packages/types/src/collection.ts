@@ -14,3 +14,16 @@ export interface Collection {
   /** Total index size in bytes. */
   totalIndexSize: number;
 }
+
+export type CollectionKind = "standard" | "capped" | "timeseries";
+
+export interface CreateCollectionOptions {
+  capped?: { size: number; max?: number };
+  timeseries?: {
+    timeField: string;
+    metaField?: string;
+    granularity?: "seconds" | "minutes" | "hours";
+  };
+  /** Time-series only: delete documents this many seconds after their timeField. */
+  expireAfterSeconds?: number;
+}

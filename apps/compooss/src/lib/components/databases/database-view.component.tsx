@@ -2,9 +2,10 @@
 
 import { Button, CollectionsSkeleton } from "@compooss/ui";
 import { CreateCollectionModal } from "@/lib/components/collections/create-collection-modal.component";
+import { useConnection } from "@/lib/providers/connection-provider";
 import { useGetCollections } from "@/lib/services/collections/collection.service";
 import { formatBytes } from "@/lib/utils";
-import type { Collection } from "@compooss/types";
+import { isProtectedDatabase, type Collection } from "@compooss/types";
 import { DatabaseBackupIcon, Plus, Share2, Table } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -16,6 +17,8 @@ type Props = {
 export const DatabaseView: React.FC<Props> = ({ dbName }) => {
   const { data: collections, isLoading } = useGetCollections(dbName);
   const [addCollectionModalOpen, setAddCollectionModalOpen] = useState(false);
+  const { isReadOnly } = useConnection();
+  const readOnly = isReadOnly || isProtectedDatabase(dbName);
 
   return (
     <>
@@ -41,13 +44,15 @@ export const DatabaseView: React.FC<Props> = ({ dbName }) => {
                   ER Diagram
                 </Button>
               </Link>
-              <Button
-                variant="primary"
-                icon={<Plus className="h-3.5 w-3.5" />}
-                onClick={() => setAddCollectionModalOpen(true)}
-              >
-                Add collection
-              </Button>
+              {!readOnly && (
+                <Button
+                  variant="primary"
+                  icon={<Plus className="h-3.5 w-3.5" />}
+                  onClick={() => setAddCollectionModalOpen(true)}
+                >
+                  Add collection
+                </Button>
+              )}
             </div>
           </div>
         </div>

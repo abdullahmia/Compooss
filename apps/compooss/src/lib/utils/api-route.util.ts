@@ -1,4 +1,5 @@
 import { createApiResponse } from "@/lib/utils/api-response.util";
+import { READ_ONLY_MESSAGE } from "@/lib/utils/read-only.util";
 import { NextResponse } from "next/server";
 
 export function extractErrorMessage(error: unknown): string {
@@ -9,6 +10,12 @@ export function extractErrorMessage(error: unknown): string {
     return msg;
   }
   return String(error);
+}
+
+export function readOnlyResponse() {
+  return NextResponse.json(createApiResponse(null, READ_ONLY_MESSAGE, 403), {
+    status: 403,
+  });
 }
 
 export function protectedDbResponse() {

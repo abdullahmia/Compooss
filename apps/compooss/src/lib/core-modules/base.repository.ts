@@ -1,17 +1,17 @@
-import { connectionManager } from "@/lib/driver/connection-manager";
 import type { MongoDriver } from "@/lib/driver/mongodb.driver";
+import { getSessionDriver } from "@/lib/utils/session.util";
 
 /**
  * All repositories extend this class.
- * Provides a shared driver reference via the ConnectionManager
- * and a db() helper. Throws if no active connection exists.
+ * Resolves the requesting browser's driver from its session cookie and
+ * provides a db() helper. Throws if that browser has no active connection.
  */
 export abstract class BaseRepository {
-  protected get driver(): MongoDriver {
-    return connectionManager.getActiveDriver();
+  protected getDriver(): Promise<MongoDriver> {
+    return getSessionDriver();
   }
 
-  protected db(dbName: string) {
-    return this.driver.getDb(dbName);
+  protected async db(dbName: string) {
+    return (await this.getDriver()).getDb(dbName);
   }
 }

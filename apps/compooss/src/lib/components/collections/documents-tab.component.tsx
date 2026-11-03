@@ -14,9 +14,11 @@ import {
   Download,
   FileText,
   Grid3X3,
+  PencilLine,
+  Trash2,
   Upload,
 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useCollectionScope } from "@/lib/providers/collection-scope";
 import { useCallback, useMemo, useState } from "react";
 import {
   QueryBar,
@@ -28,6 +30,8 @@ import { AddDocument } from "@/lib/components/collections/add-document.component
 import { DocumentFormModal } from "@/lib/components/collections/document-form-modal.component";
 import { ExportModal } from "@/lib/components/collections/export-import/export-modal.component";
 import { ImportModal } from "@/lib/components/collections/export-import/import-modal.component";
+import { BulkDeleteModal } from "@/lib/components/collections/bulk-delete-modal.component";
+import { BulkUpdateModal } from "@/lib/components/collections/bulk-update-modal.component";
 
 type Props = { readOnly?: boolean };
 
@@ -59,14 +63,13 @@ export const DocumentsTab: React.FC<Props> = ({ readOnly = false }) => {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [bulkAction, setBulkAction] = useState<"update" | "delete" | null>(null);
   const [editingDocument, setEditingDocument] = useState<{
     id: string;
     json: string;
   } | null>(null);
 
-  const params = useParams();
-  const dbName = (params?.dbName as string) ?? "";
-  const collectionName = (params?.collectionName as string) ?? "";
+  const { dbName, collectionName } = useCollectionScope();
   const {
     data,
     error: queryError,
@@ -130,6 +133,7 @@ export const DocumentsTab: React.FC<Props> = ({ readOnly = false }) => {
     <>
       <QueryBar
         onRunQuery={handleRunQuery}
+        historyNamespace={`${dbName}.${collectionName}`}
         fieldSuggestions={fieldSuggestions}
       />
 
@@ -186,6 +190,29 @@ export const DocumentsTab: React.FC<Props> = ({ readOnly = false }) => {
             >
               Import
             </Button>
+          )}
+          {!readOnly && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<PencilLine className="h-3.5 w-3.5" />}
+                onClick={() => setBulkAction("update")}
+                disabled={total === 0}
+              >
+                Update
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                icon={<Trash2 className="h-3.5 w-3.5" />}
+                onClick={() => setBulkAction("delete")}
+                disabled={total === 0}
+                className="text-destructive hover:text-destructive/80"
+              >
+                Delete
+              </Button>
+            </>
           )}
           {!readOnly && (
             <AddDocument
@@ -318,6 +345,25 @@ export const DocumentsTab: React.FC<Props> = ({ readOnly = false }) => {
         currentFilter={queryParams.filter}
         totalDocuments={total}
       />
+
+      {!readOnly && (
+        <>
+          <BulkUpdateModal
+            open={bulkAction === "update"}
+            onClose={() => setBulkAction(null)}
+            dbName={dbName}
+            collectionName={collectionName}
+            filter={queryParams.filter}
+          />
+          <BulkDeleteModal
+            open={bulkAction === "delete"}
+            onClose={() => setBulkAction(null)}
+            dbName={dbName}
+            collectionName={collectionName}
+            filter={queryParams.filter}
+          />
+        </>
+      )}
 
       {!readOnly && (
         <ImportModal

@@ -1,7 +1,8 @@
 import { isProtectedDatabase } from "@compooss/types";
 import { documentRepository } from "@/lib/core-modules/document/document.repository";
 import { createApiResponse } from "@/lib/utils/api-response.util";
-import { protectedDbResponse } from "@/lib/utils/api-route.util";
+import { isReadOnlySession } from "@/lib/utils/session.util";
+import { protectedDbResponse, readOnlyResponse } from "@/lib/utils/api-route.util";
 import { NextResponse } from "next/server";
 
 type DocMutationParams = {
@@ -12,6 +13,7 @@ export async function PATCH(req: Request, { params }: DocMutationParams) {
   try {
     const { dbName, colName, docId } = await params;
     if (isProtectedDatabase(dbName)) return protectedDbResponse();
+    if (await isReadOnlySession()) return readOnlyResponse();
     const body = await req.json();
 
     if (!body || typeof body !== "object" || Object.keys(body).length === 0) {
@@ -52,6 +54,7 @@ export async function DELETE(req: Request, { params }: DocMutationParams) {
   try {
     const { dbName, colName, docId } = await params;
     if (isProtectedDatabase(dbName)) return protectedDbResponse();
+    if (await isReadOnlySession()) return readOnlyResponse();
  
     const deleted = await documentRepository.deleteDocument({
       databaseName: dbName,

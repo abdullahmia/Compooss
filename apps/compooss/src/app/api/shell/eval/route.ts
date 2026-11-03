@@ -1,5 +1,7 @@
 import { evaluateShellCommand } from "@/lib/core-modules/shell/shell.evaluator";
+import { connectionManager } from "@/lib/driver/connection-manager";
 import { createApiResponse } from "@/lib/utils/api-response.util";
+import { getSessionId } from "@/lib/utils/session.util";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -19,7 +21,17 @@ export async function POST(req: Request) {
       );
     }
 
-    const response = await evaluateShellCommand(command, { database });
+    // Resolve the connection before evaluating anything, so a request without
+    // this browser's session cookie is rejected before any input is parsed.
+    const sessionId = await getSessionId();
+    const driver = connectionManager.getActiveDriver(sessionId);
+
+    const response = await evaluateShellCommand(command, {
+      database,
+      driver,
+      rawUri: connectionManager.getRawUri(sessionId),
+      readOnly: connectionManager.isReadOnly(sessionId),
+    });
 
     return NextResponse.json(
       createApiResponse(response, "OK", 200),

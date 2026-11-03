@@ -2,6 +2,7 @@
 
 import { apiClient } from "@/lib/config/api.config";
 import { ENDPOINTS } from "@/lib/constants";
+import { workspaceTabs } from "@/lib/hooks/use-workspace-tabs.hook";
 import { connectionDB } from "@/lib/storage/connection-db";
 import type {
   ApiResponse,
@@ -23,6 +24,8 @@ interface ConnectionContextValue {
   isConnected: boolean;
   isConnecting: boolean;
   isLoading: boolean;
+  /** True when the active connection blocks writes (set per saved connection). */
+  isReadOnly: boolean;
   activeConnection: SavedConnection | null;
   maskedUri: string | null;
   connect: (connection: SavedConnection) => Promise<ConnectionStatus | undefined>;
@@ -75,6 +78,7 @@ export function ConnectionProvider({
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isReadOnly, setIsReadOnly] = useState(false);
   const [activeConnection, setActiveConnection] =
     useState<SavedConnection | null>(null);
   const [maskedUri, setMaskedUri] = useState<string | null>(null);
@@ -90,6 +94,7 @@ export function ConnectionProvider({
       if (status?.connected) {
         setIsConnected(true);
         setMaskedUri(status.maskedUri ?? null);
+        setIsReadOnly(status.readOnly ?? false);
 
         if (!activeConnectionRef.current) {
           const savedId = localStorage.getItem(ACTIVE_CONNECTION_KEY);
@@ -126,13 +131,15 @@ export function ConnectionProvider({
       const options = buildConnectOptions(connection);
       const res = await apiClient.post<ApiResponse<ConnectionStatus>>(
         ENDPOINTS.connection.connect,
-        { uri: connection.uri, options },
+        { uri: connection.uri, options, readOnly: connection.readOnly ?? false },
       );
       const status = res.data;
 
       activeConnectionRef.current = connection;
+      workspaceTabs.clear();
       setIsConnected(true);
       setMaskedUri(status?.maskedUri ?? null);
+      setIsReadOnly(status?.readOnly ?? false);
       setActiveConnection(connection);
       localStorage.setItem(ACTIVE_CONNECTION_KEY, connection.id);
 
@@ -148,8 +155,10 @@ export function ConnectionProvider({
       await apiClient.post(ENDPOINTS.connection.disconnect);
     } finally {
       activeConnectionRef.current = null;
+      workspaceTabs.clear();
       setIsConnected(false);
       setMaskedUri(null);
+      setIsReadOnly(false);
       setActiveConnection(null);
       localStorage.removeItem(ACTIVE_CONNECTION_KEY);
     }
@@ -174,6 +183,7 @@ export function ConnectionProvider({
       isConnected,
       isConnecting,
       isLoading,
+      isReadOnly,
       activeConnection,
       maskedUri,
       connect,
@@ -185,6 +195,7 @@ export function ConnectionProvider({
       isConnected,
       isConnecting,
       isLoading,
+      isReadOnly,
       activeConnection,
       maskedUri,
       connect,

@@ -77,7 +77,20 @@ Then open **http://localhost:8080** and connect to `mongodb://mongo:27017`.
 docker run -p 8080:3000 abdullahmia/compooss:latest
 ```
 
-Open **http://localhost:8080** and connect to your MongoDB instance.
+Open **http://localhost:8080** and connect to your MongoDB instance. A `localhost` connection string is automatically redirected to your Docker host, so `mongodb://localhost:27017` works from inside the container too.
+
+### Require a login
+
+By default anyone who can reach the port can use Compooss. If it's reachable by other people, set a username and password; every page and API call then requires signing in:
+
+```bash
+docker run -p 8080:3000 \
+  -e COMPOOSS_USERNAME=admin \
+  -e COMPOOSS_PASSWORD='choose-a-strong-password' \
+  abdullahmia/compooss:latest
+```
+
+Each browser gets its own MongoDB connection, so teammates sharing one instance don't switch or disconnect each other. Mark a saved connection **Read-only** to block every write (inserts, edits, deletes, drops, imports, and shell writes) when pointing at staging or production.
 
 ### Production (self-hosted)
 

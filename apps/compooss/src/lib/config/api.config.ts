@@ -10,6 +10,10 @@ export interface ApiClientOptions {
    * Default headers applied to every request.
    */
   defaultHeaders?: HeadersInit;
+  /**
+   * Called when a request is rejected with 401, e.g. after the login expires.
+   */
+  onUnauthorized?: () => void;
 }
 
 export type RequestOptions<TBody = unknown> = Omit<RequestInit, "body" | "headers"> & {
@@ -27,11 +31,13 @@ export class ApiClient {
   private readonly baseUrl: string;
   private readonly getAuthToken?: ApiClientOptions["getAuthToken"];
   private readonly defaultHeaders: HeadersInit;
+  private readonly onUnauthorized?: ApiClientOptions["onUnauthorized"];
 
   constructor(options: ApiClientOptions = {}) {
     this.baseUrl = options.baseUrl ?? "";
     this.getAuthToken = options.getAuthToken;
     this.defaultHeaders = options.defaultHeaders ?? {};
+    this.onUnauthorized = options.onUnauthorized;
   }
 
   /**
@@ -91,6 +97,7 @@ export class ApiClient {
     const response = await fetch(this.resolveUrl(path), init);
 
     if (!response.ok) {
+      if (response.status === 401) this.onUnauthorized?.();
       const rawText = await response.text();
       let errorPayload: unknown;
       try {
@@ -154,4 +161,11 @@ export class ApiClient {
 
 export const apiClient = new ApiClient({
   baseUrl: process.env.NEXT_PUBLIC_API_URL ?? "/api",
+  onUnauthorized: () => {
+    const { pathname, search } = window.location;
+    if (pathname === "/login") return;
+    window.location.assign(
+      `/login?next=${encodeURIComponent(pathname + search)}`,
+    );
+  },
 });

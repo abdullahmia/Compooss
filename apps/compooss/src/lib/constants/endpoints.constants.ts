@@ -1,4 +1,9 @@
 export const ENDPOINTS = {
+  auth: {
+    login: "/auth/login",
+    logout: "/auth/logout",
+    session: "/auth/session",
+  },
   connection: {
     connect: "/connection/connect",
     disconnect: "/connection/disconnect",
@@ -17,6 +22,8 @@ export const ENDPOINTS = {
     all: (db: string, collection: string) => `/databases/${db}/collections/${collection}/documents`,
     byId: (db: string, collection: string, docId: string) =>
       `/databases/${db}/collections/${collection}/documents/${encodeURIComponent(docId)}`,
+    duplicate: (db: string, collection: string, docId: string) =>
+      `/databases/${db}/collections/${collection}/documents/${encodeURIComponent(docId)}/duplicate`,
   },
   indexes: {
     root: (db: string, col: string) =>
@@ -46,5 +53,12 @@ export const ENDPOINTS = {
   },
   shell: {
     eval: "/shell/eval",
+  },
+  server: {
+    status: "/server/status",
+    operations: "/server/operations",
+    operationById: (opid: string | number) =>
+      `/server/operations/${encodeURIComponent(String(opid))}`,
+    profiler: "/server/profiler",
   },
 }

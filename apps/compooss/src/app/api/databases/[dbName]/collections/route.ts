@@ -1,6 +1,9 @@
-import { isProtectedDatabase } from "@compooss/types";
+import { isProtectedDatabase, type CreateCollectionOptions } from "@compooss/types";
 import { collectionRepository } from "@/lib/core-modules/collection/collection.repository";
 import { createApiResponse } from "@/lib/utils/api-response.util";
+import { parseCollectionOptions } from "@/lib/utils/collection-options.util";
+import { isReadOnlySession } from "@/lib/utils/session.util";
+import { readOnlyResponse } from "@/lib/utils/api-route.util";
 import { NextResponse, type NextRequest } from "next/server";
 
 interface DbParamProps {
@@ -36,7 +39,8 @@ export async function POST(req: NextRequest, { params }: DbParamProps) {
     );
   }
 
-  let body: { collectionName?: string };
+  if (await isReadOnlySession()) return readOnlyResponse();
+  let body: { collectionName?: string; options?: unknown };
   try {
     body = await req.json();
   } catch {
@@ -62,10 +66,19 @@ export async function POST(req: NextRequest, { params }: DbParamProps) {
     );
   }
 
+  let options: CreateCollectionOptions | undefined;
+  try {
+    options = parseCollectionOptions(body.options);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Invalid collection options.";
+    return NextResponse.json(createApiResponse(null, message, 400), { status: 400 });
+  }
+
   try {
     const collection = await collectionRepository.createCollection({
       databaseName: dbName,
       collectionName: trimmed,
+      options,
     });
     return NextResponse.json(
       createApiResponse(collection, "Collection created successfully.", 201),

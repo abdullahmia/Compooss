@@ -4,25 +4,42 @@ import { useConnection } from "@/lib/providers/connection-provider";
 import { useShellPanel } from "@/lib/providers/shell-provider";
 import { ThemeSwitcher } from "@/lib/components/common/theme-switcher.component";
 import { SettingsModal } from "@/lib/components/settings/settings-modal.component";
-import { Button, ConfirmDestructiveModal, IconButton } from "@compooss/ui";
+import { useAuthSession, useLogout } from "@/lib/services/auth/auth.service";
+import { Badge, Button, ConfirmDestructiveModal, IconButton } from "@compooss/ui";
 import {
+  Activity,
   Database,
   Leaf,
+  Lock,
   LogOut,
+  Search,
   Settings,
   TerminalSquare,
+  UserRound,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export const TopBar: React.FC = () => {
+type Props = {
+  onOpenCommandPalette: () => void;
+};
+
+const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+
+export const TopBar: React.FC<Props> = ({ onOpenCommandPalette }) => {
   const [disconnectOpen, setDisconnectOpen] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { isOpen: isShellOpen, toggle: toggleShell } = useShellPanel();
-  const { activeConnection, maskedUri, disconnect } = useConnection();
+  const { activeConnection, maskedUri, isReadOnly, disconnect } = useConnection();
+  const { data: auth } = useAuthSession();
+  const { mutate: logout, isPending: isLoggingOut } = useLogout({
+    onSuccess: () => window.location.assign("/login"),
+    onError: () => toast.error("Sign-out failed. Please try again."),
+  });
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleDisconnect = async () => {
     setIsDisconnecting(true);
@@ -58,12 +75,35 @@ export const TopBar: React.FC = () => {
                 {activeConnection.label}
               </span>
             )}
+            {isReadOnly && (
+              <Badge variant="warning" size="sm" className="shrink-0 gap-1">
+                <Lock className="h-2.5 w-2.5" />
+                Read-only
+              </Badge>
+            )}
             <span className="text-xs font-mono text-muted-foreground truncate min-w-0 flex-1">
               {maskedUri ?? ""}
             </span>
           </div>
         </div>
 
+        <button
+          type="button"
+          onClick={onOpenCommandPalette}
+          className="hidden md:flex items-center gap-2 h-7 px-2.5 rounded-sm border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+        >
+          <Search className="h-3.5 w-3.5" />
+          Search
+          <kbd className="px-1 rounded-sm border border-border text-[10px] font-sans">
+            {isMac ? "⌘K" : "Ctrl K"}
+          </kbd>
+        </button>
+        <IconButton
+          variant={pathname === "/performance" ? "active" : "ghost"}
+          icon={<Activity className="h-4 w-4" />}
+          label="Performance"
+          onClick={() => router.push("/performance")}
+        />
         <ThemeSwitcher />
         <IconButton
           variant="ghost"
@@ -89,6 +129,23 @@ export const TopBar: React.FC = () => {
           label="MongoDB Shell"
           onClick={toggleShell}
         />
+        {auth?.enabled && (
+          <>
+            <div className="h-5 w-px bg-border mx-1" />
+            <span className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground">
+              <UserRound className="h-3.5 w-3.5" />
+              {auth.username}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              loading={isLoggingOut}
+              onClick={() => logout()}
+            >
+              Log out
+            </Button>
+          </>
+        )}
       </div>
 
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />

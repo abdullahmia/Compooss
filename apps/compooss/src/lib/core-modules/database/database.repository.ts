@@ -8,14 +8,14 @@ export class DatabaseRepository extends BaseRepository {
    * Returns a list of all databases with size info (including system databases; they are read-only in the UI).
    */
   async getAllDatabases(): Promise<Database[]> {
-    return this.driver.listDatabases();
+    return (await this.getDriver()).listDatabases();
   }
 
   /**
    * Returns a single database by name, or null if it doesn't exist.
    */
   async getDatabase(databaseName: string): Promise<Database | null> {
-    const databases = await this.driver.listDatabases();
+    const databases = await (await this.getDriver()).listDatabases();
     return databases.find((db) => db.name === databaseName) ?? null;
   }
 

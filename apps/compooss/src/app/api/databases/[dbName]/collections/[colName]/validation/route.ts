@@ -1,6 +1,7 @@
 import { validationRepository } from "@/lib/core-modules/validation/validation.repository";
 import { createApiResponse } from "@/lib/utils/api-response.util";
-import { extractErrorMessage } from "@/lib/utils/api-route.util";
+import { isReadOnlySession } from "@/lib/utils/session.util";
+import { extractErrorMessage, readOnlyResponse } from "@/lib/utils/api-route.util";
 import { isProtectedDatabase } from "@compooss/types";
 import { NextResponse } from "next/server";
 
@@ -33,6 +34,7 @@ export async function PUT(req: Request, { params }: ValidationParams) {
         { status: 403 },
       );
     }
+    if (await isReadOnlySession()) return readOnlyResponse();
 
     const body = (await req.json()) as {
       validator?: Record<string, unknown>;

@@ -3,7 +3,7 @@
 import type { SavedConnection } from "@compooss/types";
 import { Button, IconButton, cn } from "@compooss/ui";
 import { formatDistanceToNow } from "date-fns";
-import { Clock, Pencil, Plug2, Star, StarOff, Trash2 } from "lucide-react";
+import { Clock, Lock, Pencil, Plug2, Star, StarOff, Trash2 } from "lucide-react";
 
 type Props = {
   connection: SavedConnection;
@@ -58,6 +58,11 @@ export const ConnectionCard: React.FC<Props> = ({
             </span>
             {connection.isFavorite && (
               <Star className="h-2.5 w-2.5 fill-warning text-warning shrink-0" />
+            )}
+            {connection.readOnly && (
+              <span title="Read-only" className="shrink-0">
+                <Lock className="h-2.5 w-2.5 text-warning" />
+              </span>
             )}
             {connection.label && (
               <span className="text-[10px] px-1.5 py-px bg-primary/8 text-primary/70 rounded-full font-medium shrink-0 border border-primary/10">

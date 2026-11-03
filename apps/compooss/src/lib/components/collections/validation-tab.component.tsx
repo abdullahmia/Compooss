@@ -24,7 +24,7 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useCollectionScope } from "@/lib/providers/collection-scope";
 import { useCallback, useEffect, useState } from "react";
 
 type Props = { readOnly?: boolean };
@@ -152,9 +152,7 @@ function CheckResultsPanel({
 }
 
 export const ValidationTab: React.FC<Props> = ({ readOnly = false }) => {
-  const params = useParams();
-  const dbName = (params?.dbName as string) ?? "";
-  const collectionName = (params?.collectionName as string) ?? "";
+  const { dbName, collectionName } = useCollectionScope();
 
   const [validatorJson, setValidatorJson] = useState(DEFAULT_SCHEMA);
   const [level, setLevel] = useState<ValidationLevel>("strict");

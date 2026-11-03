@@ -1,4 +1,5 @@
 export * from "./api";
+export * from "./auth";
 export * from "./collection";
 export * from "./connection";
 export * from "./constants";
@@ -7,7 +8,9 @@ export * from "./document";
 export * from "./export";
 export * from "./index-types";
 export * from "./inputs";
+export * from "./query";
 export * from "./schema";
+export * from "./server";
 export * from "./validation";
 export * from "./aggregation";
 export * from "./shell";

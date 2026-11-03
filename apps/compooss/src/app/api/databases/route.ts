@@ -1,5 +1,7 @@
 import { databaseRepository } from "@/lib/core-modules/database/database.repository";
 import { createApiResponse } from "@/lib/utils/api-response.util";
+import { isReadOnlySession } from "@/lib/utils/session.util";
+import { readOnlyResponse } from "@/lib/utils/api-route.util";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -17,6 +19,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  if (await isReadOnlySession()) return readOnlyResponse();
   const { dbName, collectionName } = await req.json();
   try {
     const created = await databaseRepository.createDatabase({

@@ -1,6 +1,8 @@
 import { aggregationRepository } from "@/lib/core-modules/aggregation/aggregation.repository";
 import { createApiResponse } from "@/lib/utils/api-response.util";
-import { extractErrorMessage } from "@/lib/utils/api-route.util";
+import { extractErrorMessage, readOnlyResponse } from "@/lib/utils/api-route.util";
+import { hasWriteStage } from "@/lib/utils/read-only.util";
+import { isReadOnlySession } from "@/lib/utils/session.util";
 import { isProtectedDatabase } from "@compooss/types";
 import { NextResponse } from "next/server";
 
@@ -31,6 +33,7 @@ export async function POST(req: Request, { params }: AggregateParams) {
           { status: 403 },
         );
       }
+      if (await isReadOnlySession()) return readOnlyResponse();
 
       if (!body.viewName || typeof body.viewName !== "string") {
         return NextResponse.json(
@@ -64,6 +67,10 @@ export async function POST(req: Request, { params }: AggregateParams) {
         createApiResponse(null, "pipeline must be an array.", 400),
         { status: 400 },
       );
+    }
+
+    if (hasWriteStage(body.pipeline) && (await isReadOnlySession())) {
+      return readOnlyResponse();
     }
 
     const options = body.options ?? {};
