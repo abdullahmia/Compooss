@@ -18,7 +18,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useCollectionScope } from "@/lib/providers/collection-scope";
 import { useCallback, useMemo, useState } from "react";
 import {
   QueryBar,
@@ -69,9 +69,7 @@ export const DocumentsTab: React.FC<Props> = ({ readOnly = false }) => {
     json: string;
   } | null>(null);
 
-  const params = useParams();
-  const dbName = (params?.dbName as string) ?? "";
-  const collectionName = (params?.collectionName as string) ?? "";
+  const { dbName, collectionName } = useCollectionScope();
   const {
     data,
     error: queryError,

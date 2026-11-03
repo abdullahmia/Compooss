@@ -11,7 +11,7 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useCollectionScope } from "@/lib/providers/collection-scope";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -300,9 +300,7 @@ function FieldCard({
 }
 
 export const SchemaTab: React.FC = () => {
-  const params = useParams();
-  const dbName = (params?.dbName as string) ?? "";
-  const collectionName = (params?.collectionName as string) ?? "";
+  const { dbName, collectionName } = useCollectionScope();
   const queryClient = useQueryClient();
 
   const [sampleSize, setSampleSize] = useState(1000);

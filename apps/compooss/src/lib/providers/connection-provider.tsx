@@ -2,6 +2,7 @@
 
 import { apiClient } from "@/lib/config/api.config";
 import { ENDPOINTS } from "@/lib/constants";
+import { workspaceTabs } from "@/lib/hooks/use-workspace-tabs.hook";
 import { connectionDB } from "@/lib/storage/connection-db";
 import type {
   ApiResponse,
@@ -135,6 +136,7 @@ export function ConnectionProvider({
       const status = res.data;
 
       activeConnectionRef.current = connection;
+      workspaceTabs.clear();
       setIsConnected(true);
       setMaskedUri(status?.maskedUri ?? null);
       setIsReadOnly(status?.readOnly ?? false);
@@ -153,6 +155,7 @@ export function ConnectionProvider({
       await apiClient.post(ENDPOINTS.connection.disconnect);
     } finally {
       activeConnectionRef.current = null;
+      workspaceTabs.clear();
       setIsConnected(false);
       setMaskedUri(null);
       setIsReadOnly(false);

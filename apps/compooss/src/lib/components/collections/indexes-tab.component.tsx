@@ -10,7 +10,7 @@ import {
 } from "@/lib/services/indexes/indexes.service";
 import { getIndexType, formatKeySpec } from "@/lib/utils";
 import { Eye, EyeOff, Plus, RefreshCw, Trash2 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useCollectionScope } from "@/lib/providers/collection-scope";
 import { useState } from "react";
 
 type Props = { readOnly?: boolean };
@@ -47,9 +47,7 @@ function IndexPropertiesBadges({ idx }: { idx: IndexWithStats }) {
 }
 
 export const IndexesTab: React.FC<Props> = ({ readOnly = false }) => {
-  const params = useParams();
-  const dbName = (params?.dbName as string) ?? "";
-  const collectionName = (params?.collectionName as string) ?? "";
+  const { dbName, collectionName } = useCollectionScope();
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
 

@@ -21,7 +21,13 @@ import {
   Table,
   Trash2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { workspaceTabs } from "@/lib/hooks/use-workspace-tabs.hook";
+import {
+  collectionPath,
+  databaseFromPath,
+  parseCollectionPath,
+} from "@/lib/utils/collection-path.util";
 import React, { useState } from "react";
 
 type Props = {
@@ -36,6 +42,8 @@ export const SidebarItem: React.FC<Props> = ({
   onToggleExpand,
 }) => {
   const router = useRouter();
+  const pathname = usePathname();
+  const activeDbName = databaseFromPath(pathname);
   const { isReadOnly } = useConnection();
   const isProtected = isReadOnly || isProtectedDatabase(db.name);
 
@@ -51,16 +59,27 @@ export const SidebarItem: React.FC<Props> = ({
 
   const { mutateAsync: deleteDatabase, isPending: isDeletingDb } =
     useDeleteDatabase({
-      onSuccess: () => setDeleteDbModalOpen(false),
+      onSuccess: () => {
+        setDeleteDbModalOpen(false);
+        workspaceTabs.closeDropped(db.name);
+        if (activeDbName === db.name) router.push("/databases");
+      },
     });
 
   const { mutateAsync: deleteCollection, isPending: isDeletingCol } =
     useDeleteCollection(db.name, {
-      onSuccess: () => setCollectionToDelete(null),
+      onSuccess: (_data, collectionName) => {
+        setCollectionToDelete(null);
+        workspaceTabs.closeDropped(db.name, collectionName);
+        const viewing = parseCollectionPath(pathname);
+        if (viewing?.dbName === db.name && viewing.collectionName === collectionName) {
+          router.push(`/databases/${encodeURIComponent(db.name)}`);
+        }
+      },
     });
 
   const handleSelectCollection = (collection: Collection) => {
-    router.push(`/databases/${db.name}/collections/${collection.name}`);
+    router.push(collectionPath({ dbName: db.name, collectionName: collection.name }));
   };
 
   const handleDeleteDbClick = (e: React.MouseEvent) => {

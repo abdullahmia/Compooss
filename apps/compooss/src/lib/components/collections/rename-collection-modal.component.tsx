@@ -10,6 +10,8 @@ import {
   ModalHeader,
 } from "@compooss/ui";
 import { renameCollectionSchema, type TRenameCollectionInput } from "@/lib/schemas";
+import { workspaceTabs } from "@/lib/hooks/use-workspace-tabs.hook";
+import { collectionPath, parseCollectionPath } from "@/lib/utils/collection-path.util";
 import { useRenameCollection } from "@/lib/services/collections/collection.service";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Pencil } from "lucide-react";
@@ -41,12 +43,13 @@ export const RenameCollectionModal: React.FC<Props> = ({
   const { mutateAsync: renameCollection, isPending } = useRenameCollection(dbName, {
     onSuccess: (_data, { collectionName: oldName, newName }) => {
       toast.success(`Renamed "${oldName}" to "${newName}"`);
+      workspaceTabs.rename(dbName, oldName, newName);
       // Keep the user on the renamed collection if they were viewing it.
-      const oldPath = `/databases/${dbName}/collections/${oldName}`;
-      if (pathname === oldPath) {
+      const viewing = parseCollectionPath(pathname);
+      if (viewing?.dbName === dbName && viewing.collectionName === oldName) {
         const query = searchParams.toString();
         router.replace(
-          `/databases/${dbName}/collections/${newName}${query ? `?${query}` : ""}`,
+          `${collectionPath({ dbName, collectionName: newName })}${query ? `?${query}` : ""}`,
         );
       }
       onClose();

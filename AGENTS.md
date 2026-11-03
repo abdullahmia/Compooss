@@ -102,6 +102,8 @@ Use `createApiResponse(data, message, status)` from `lib/utils/`.
 
 **Protected databases** — `admin`, `config`, `local` are read-only; use `isProtectedDatabase(dbName)` in route handlers to return 403 on write attempts.
 
+**Collection tabs** — open collections stay mounted as tabs (`WorkspaceShell` renders them; the collection route page renders nothing). Inside a collection view, get the db/collection from `useCollectionScope()`, never `useParams()` — route params always describe the *active* tab, so hidden tabs would read the wrong collection.
+
 **Read-only connections** — a saved connection can be marked read-only. Every write route must also check `if (await isReadOnlySession()) return readOnlyResponse();`, and the shell only allows the read methods/commands listed in `shell.evaluator.ts`.
 
 **Next.js 15 params** — route params are Promises; always `await params` before destructuring:

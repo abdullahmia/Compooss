@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useCollectionScope } from "@/lib/providers/collection-scope";
 import { useCallback, useState } from "react";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import { useAggregationPipeline } from "@/lib/components/collections/aggregations/use-aggregation-pipeline";
@@ -17,9 +17,7 @@ import { CreateViewModal } from "@/lib/components/collections/aggregations/creat
 type Props = { readOnly?: boolean };
 
 export const AggregationsTab: React.FC<Props> = ({ readOnly = false }) => {
-  const params = useParams();
-  const dbName = (params?.dbName as string) ?? "";
-  const collectionName = (params?.collectionName as string) ?? "";
+  const { dbName, collectionName } = useCollectionScope();
 
   const pipeline = useAggregationPipeline(dbName, collectionName);
 

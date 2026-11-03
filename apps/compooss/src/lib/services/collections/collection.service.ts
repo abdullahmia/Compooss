@@ -5,18 +5,20 @@ import type { ApiResponse, Collection, CreateCollectionOptions } from "@compooss
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { COLLECTION_QUERY_KEYS } from "./collection-query.key";
 
+export async function fetchCollections(db: string): Promise<Collection[]> {
+  const response = await apiClient.get<ApiResponse<Collection[]>>(
+    ENDPOINTS.collections.root(db),
+  );
+  return response.data ?? [];
+}
+
 export const useGetCollections = (
   db: string,
   options?: TQueryOptions<Collection[]>,
 ) =>
   useQuery({
     queryKey: COLLECTION_QUERY_KEYS.list(db),
-    queryFn: async () => {
-      const response = await apiClient.get<ApiResponse<Collection[]>>(
-        ENDPOINTS.collections.root(db),
-      );
-      return response.data ?? [];
-    },
+    queryFn: () => fetchCollections(db),
     enabled: !!db,
     ...options,
   });

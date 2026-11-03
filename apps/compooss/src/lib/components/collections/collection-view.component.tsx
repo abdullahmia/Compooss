@@ -7,13 +7,14 @@ import { IndexesTab } from "@/lib/components/collections/indexes-tab.component";
 import { SchemaTab } from "@/lib/components/collections/schema-tab.component";
 import { ValidationTab } from "@/lib/components/collections/validation-tab.component";
 import { VALID_TABS, type ViewTab } from "@/lib/constants";
+import { CollectionScopeProvider } from "@/lib/providers/collection-scope";
 import { useConnection } from "@/lib/providers/connection-provider";
 import { useGetCollections } from "@/lib/services/collections/collection.service";
 import { formatBytes } from "@/lib/utils";
 import { isProtectedDatabase, type Collection } from "@compooss/types";
 import { Badge, Tabs } from "@compooss/ui";
 import { BarChart3, FileText, Grid3X3, ShieldCheck } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 type Props = {
   dbName: string;
@@ -42,6 +43,7 @@ export const CollectionView: React.FC<Props> = ({
   const { data: collections } = useGetCollections(dbName);
   const { isReadOnly } = useConnection();
   const collection = collections?.find((c) => c.name === collectionName);
+  const scope = useMemo(() => ({ dbName, collectionName }), [dbName, collectionName]);
 
   const TABS: { id: ViewTab; label: string; icon: React.ReactNode }[] = [
     {
@@ -97,34 +99,36 @@ export const CollectionView: React.FC<Props> = ({
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden">
-      <div className="px-4 py-3 border-b border-border bg-card/50">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold text-foreground">
-            {dbName}.{collectionName}
-          </h2>
-          <Badge>{collection?.documentCount.toLocaleString()} docs</Badge>
-          {collection && getCollectionKindLabel(collection) && (
-            <Badge variant="info" size="sm">
-              {getCollectionKindLabel(collection)}
+    <CollectionScopeProvider value={scope}>
+      <div className="flex-1 flex flex-col h-full overflow-hidden">
+        <div className="px-4 py-3 border-b border-border bg-card/50">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-foreground">
+              {dbName}.{collectionName}
+            </h2>
+            <Badge>{collection?.documentCount.toLocaleString()} docs</Badge>
+            {collection && getCollectionKindLabel(collection) && (
+              <Badge variant="info" size="sm">
+                {getCollectionKindLabel(collection)}
+              </Badge>
+            )}
+            <Badge variant="subtle" size="sm">
+              {collection ? formatBytes(collection.size) : "-"} •{" "}
+              {collection?.indexCount ?? 0} indexes • Avg:{" "}
+              {collection ? formatBytes(collection.avgObjSize) : "-"}
             </Badge>
-          )}
-          <Badge variant="subtle" size="sm">
-            {collection ? formatBytes(collection.size) : "-"} •{" "}
-            {collection?.indexCount ?? 0} indexes • Avg:{" "}
-            {collection ? formatBytes(collection.avgObjSize) : "-"}
-          </Badge>
+          </div>
         </div>
+
+        <Tabs
+          variant="underline"
+          items={TABS}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
+
+        {renderTabContent()}
       </div>
-
-      <Tabs
-        variant="underline"
-        items={TABS}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
-
-      {renderTabContent()}
-    </div>
+    </CollectionScopeProvider>
   );
 };

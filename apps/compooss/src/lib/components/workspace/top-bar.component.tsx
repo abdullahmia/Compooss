@@ -12,6 +12,7 @@ import {
   Leaf,
   Lock,
   LogOut,
+  Search,
   Settings,
   TerminalSquare,
   UserRound,
@@ -20,7 +21,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export const TopBar: React.FC = () => {
+type Props = {
+  onOpenCommandPalette: () => void;
+};
+
+const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform);
+
+export const TopBar: React.FC<Props> = ({ onOpenCommandPalette }) => {
   const [disconnectOpen, setDisconnectOpen] = useState(false);
   const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -80,6 +87,17 @@ export const TopBar: React.FC = () => {
           </div>
         </div>
 
+        <button
+          type="button"
+          onClick={onOpenCommandPalette}
+          className="hidden md:flex items-center gap-2 h-7 px-2.5 rounded-sm border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+        >
+          <Search className="h-3.5 w-3.5" />
+          Search
+          <kbd className="px-1 rounded-sm border border-border text-[10px] font-sans">
+            {isMac ? "⌘K" : "Ctrl K"}
+          </kbd>
+        </button>
         <IconButton
           variant={pathname === "/performance" ? "active" : "ghost"}
           icon={<Activity className="h-4 w-4" />}
