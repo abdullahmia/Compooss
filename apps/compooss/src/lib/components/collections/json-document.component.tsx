@@ -1,12 +1,16 @@
 "use client";
 
 import type { MongoDocument } from "@/lib/types/document.type";
-import { useDeleteDocument } from "@/lib/services/documents/documents.service";
+import {
+  useDeleteDocument,
+  useDuplicateDocument,
+} from "@/lib/services/documents/documents.service";
 import { getDocumentId } from "@/lib/utils";
 import {
   ChevronDown,
   ChevronRight,
   Copy,
+  CopyPlus,
   FileText,
   Pencil,
   Trash2,
@@ -236,7 +240,7 @@ export const JsonDocument: React.FC<Props> = ({
   const [expanded, setExpanded] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const docId = getDocumentId(document);
-  const canDelete = !readOnly && !!(dbName && collectionName && docId);
+  const canWrite = !readOnly && !!(dbName && collectionName && docId);
 
   const { mutateAsync: deleteDocument, isPending: isDeleting } =
     useDeleteDocument(dbName ?? "", collectionName ?? "", {
@@ -246,17 +250,26 @@ export const JsonDocument: React.FC<Props> = ({
       },
     });
 
+  const { mutate: duplicateDocument, isPending: isDuplicating } =
+    useDuplicateDocument(dbName ?? "", collectionName ?? "", {
+      onSuccess: () => toast.success("Document duplicated"),
+      onError: (error) => {
+        const apiErr = error as { payload?: { message?: string } };
+        toast.error(apiErr.payload?.message ?? "Duplicate failed.");
+      },
+    });
+
   const handleCopy = () => {
     navigator.clipboard.writeText(JSON.stringify(document, null, 2));
     toast.success("Document copied to clipboard");
   };
 
   const handleDeleteClick = () => {
-    if (canDelete) setShowDeleteConfirm(true);
+    if (canWrite) setShowDeleteConfirm(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!canDelete) return;
+    if (!canWrite) return;
     await deleteDocument(docId);
   };
 
@@ -301,7 +314,17 @@ export const JsonDocument: React.FC<Props> = ({
               onClick={() => onEdit?.(document)}
             />
           )}
-          {canDelete && (
+          {canWrite && (
+            <IconButton
+              variant="default"
+              size="md"
+              icon={<CopyPlus className="h-3 w-3" />}
+              label="Duplicate Document"
+              disabled={isDuplicating}
+              onClick={() => duplicateDocument(docId)}
+            />
+          )}
+          {canWrite && (
             <IconButton
               variant="danger"
               size="md"

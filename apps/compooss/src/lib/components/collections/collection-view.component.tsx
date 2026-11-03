@@ -10,7 +10,7 @@ import { VALID_TABS, type ViewTab } from "@/lib/constants";
 import { useConnection } from "@/lib/providers/connection-provider";
 import { useGetCollections } from "@/lib/services/collections/collection.service";
 import { formatBytes } from "@/lib/utils";
-import { isProtectedDatabase } from "@compooss/types";
+import { isProtectedDatabase, type Collection } from "@compooss/types";
 import { Badge, Tabs } from "@compooss/ui";
 import { BarChart3, FileText, Grid3X3, ShieldCheck } from "lucide-react";
 import { useState } from "react";
@@ -20,6 +20,13 @@ type Props = {
   collectionName: string;
   initialTab?: string;
 };
+
+function getCollectionKindLabel(collection: Collection): string | null {
+  if (collection.type === "timeseries") return "Time series";
+  if (collection.type === "view") return "View";
+  if (collection.options?.capped) return "Capped";
+  return null;
+}
 
 export const CollectionView: React.FC<Props> = ({
   dbName,
@@ -97,6 +104,11 @@ export const CollectionView: React.FC<Props> = ({
             {dbName}.{collectionName}
           </h2>
           <Badge>{collection?.documentCount.toLocaleString()} docs</Badge>
+          {collection && getCollectionKindLabel(collection) && (
+            <Badge variant="info" size="sm">
+              {getCollectionKindLabel(collection)}
+            </Badge>
+          )}
           <Badge variant="subtle" size="sm">
             {collection ? formatBytes(collection.size) : "-"} •{" "}
             {collection?.indexCount ?? 0} indexes • Avg:{" "}

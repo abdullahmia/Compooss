@@ -1,4 +1,4 @@
-import { CollectionInfo } from "mongodb";
+import type { CollectionInfo, CreateCollectionOptions as DriverCreateOptions } from "mongodb";
 import { BaseRepository } from "../base.repository";
 import type {
   Collection,
@@ -99,7 +99,7 @@ export class CollectionRepository extends BaseRepository {
    * Creates a new collection inside an existing database.
    */
   async createCollection(input: CreateCollectionInput): Promise<Collection> {
-    const { databaseName, collectionName } = input;
+    const { databaseName, collectionName, options = {} } = input;
 
     const db = await this.db(databaseName);
     const existing = await db
@@ -112,13 +112,26 @@ export class CollectionRepository extends BaseRepository {
       );
     }
 
-    const collection = await db.createCollection(collectionName);
+    const driverOptions: DriverCreateOptions = {};
+    if (options.capped) {
+      driverOptions.capped = true;
+      driverOptions.size = options.capped.size;
+      if (options.capped.max) driverOptions.max = options.capped.max;
+    }
+    if (options.timeseries) {
+      driverOptions.timeseries = options.timeseries;
+      if (options.expireAfterSeconds) {
+        driverOptions.expireAfterSeconds = options.expireAfterSeconds;
+      }
+    }
+
+    const collection = await db.createCollection(collectionName, driverOptions);
 
     return {
       name: collection.collectionName,
-      type: "collection",
+      type: options.timeseries ? "timeseries" : "collection",
       documentCount: 0,
-      options: {},
+      options: { ...driverOptions },
       storageSize: 0,
       size: 0,
       avgObjSize: 0,
@@ -130,6 +143,16 @@ export class CollectionRepository extends BaseRepository {
   /**
    * Drops a collection from a database.
    */
+  /** Renames a collection within its database. Fails if the new name is taken. */
+  async renameCollection(
+    databaseName: string,
+    collectionName: string,
+    newName: string,
+  ): Promise<void> {
+    const db = await this.db(databaseName);
+    await db.collection(collectionName).rename(newName);
+  }
+
   async deleteCollection(input: DeleteCollectionInput): Promise<boolean> {
     const { databaseName, collectionName } = input;
     const db = await this.db(databaseName);

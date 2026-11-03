@@ -7,6 +7,7 @@ import { SettingsModal } from "@/lib/components/settings/settings-modal.componen
 import { useAuthSession, useLogout } from "@/lib/services/auth/auth.service";
 import { Badge, Button, ConfirmDestructiveModal, IconButton } from "@compooss/ui";
 import {
+  Activity,
   Database,
   Leaf,
   Lock,
@@ -15,7 +16,7 @@ import {
   TerminalSquare,
   UserRound,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -31,6 +32,7 @@ export const TopBar: React.FC = () => {
     onError: () => toast.error("Sign-out failed. Please try again."),
   });
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleDisconnect = async () => {
     setIsDisconnecting(true);
@@ -78,6 +80,12 @@ export const TopBar: React.FC = () => {
           </div>
         </div>
 
+        <IconButton
+          variant={pathname === "/performance" ? "active" : "ghost"}
+          icon={<Activity className="h-4 w-4" />}
+          label="Performance"
+          onClick={() => router.push("/performance")}
+        />
         <ThemeSwitcher />
         <IconButton
           variant="ghost"

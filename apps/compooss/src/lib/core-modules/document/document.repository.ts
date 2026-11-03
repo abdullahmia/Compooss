@@ -1,7 +1,9 @@
-import { ObjectId, type Sort } from "mongodb";
+import { ObjectId, type Document, type Filter, type Sort, type UpdateFilter } from "mongodb";
 import { BaseRepository } from "../base.repository";
 import type {
   AddDocumentInput,
+  BulkDeleteResult,
+  BulkUpdateResult,
   DeleteDocumentInput,
   DocumentRecord,
   FilterDocumentsInput,
@@ -147,6 +149,57 @@ export class DocumentRepository extends BaseRepository {
 
     const result = await col.deleteOne({ _id: new ObjectId(documentId) });
     return result.deletedCount === 1;
+  }
+
+  /**
+   * Inserts a copy of a document under a new _id, keeping every BSON type.
+   * Returns null if the original doesn't exist.
+   */
+  async duplicateDocument(input: DeleteDocumentInput): Promise<DocumentRecord | null> {
+    const { databaseName, collectionName, documentId } = input;
+    const col = await this.getCollection(databaseName, collectionName);
+
+    const original = await col.findOne({ _id: new ObjectId(documentId) });
+    if (!original) return null;
+
+    const copy: DocumentRecord = { ...original };
+    delete copy._id;
+    const result = await col.insertOne(copy);
+    return { ...copy, _id: result.insertedId } as DocumentRecord;
+  }
+
+  async countDocuments(
+    databaseName: string,
+    collectionName: string,
+    filter: Filter<Document>,
+  ): Promise<number> {
+    const col = await this.getCollection(databaseName, collectionName);
+    return col.countDocuments(filter as Filter<DocumentRecord>);
+  }
+
+  /** Applies an update (operators or an aggregation pipeline) to every matching document. */
+  async updateMany(
+    databaseName: string,
+    collectionName: string,
+    filter: Filter<Document>,
+    update: UpdateFilter<Document> | Document[],
+  ): Promise<BulkUpdateResult> {
+    const col = await this.getCollection(databaseName, collectionName);
+    const result = await col.updateMany(
+      filter as Filter<DocumentRecord>,
+      update as UpdateFilter<DocumentRecord>,
+    );
+    return { matchedCount: result.matchedCount, modifiedCount: result.modifiedCount };
+  }
+
+  async deleteMany(
+    databaseName: string,
+    collectionName: string,
+    filter: Filter<Document>,
+  ): Promise<BulkDeleteResult> {
+    const col = await this.getCollection(databaseName, collectionName);
+    const result = await col.deleteMany(filter as Filter<DocumentRecord>);
+    return { deletedCount: result.deletedCount };
   }
 }
 

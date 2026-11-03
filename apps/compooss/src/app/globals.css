@@ -960,3 +960,26 @@
   --xy-selection-background-color: hsl(var(--primary) / 0.08);
   --xy-selection-border: 1px dotted hsl(var(--primary) / 0.5);
 }
+
+/*
+ * Chart series colors, in fixed categorical order (series keep their slot).
+ * Validated for color-vision deficiency and contrast against the card
+ * surface in both modes; dark uses its own steps, not an inverted light set.
+ */
+:root {
+  --viz-1: #2a78d6;
+  --viz-2: #eb6834;
+  --viz-3: #1baf7a;
+  --viz-4: #eda100;
+  --viz-5: #e87ba4;
+  --viz-6: #008300;
+}
+
+.dark {
+  --viz-1: #3987e5;
+  --viz-2: #d95926;
+  --viz-3: #199e70;
+  --viz-4: #c98500;
+  --viz-5: #d55181;
+  --viz-6: #008300;
+}
