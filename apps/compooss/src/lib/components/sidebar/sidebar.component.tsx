@@ -2,10 +2,23 @@
 
 import { CreateDatabaseModal } from "@/lib/components/databases/create-database-modal.component";
 import { SidebarItem } from "@/lib/components/sidebar/sidebar-item.component";
+import {
+  SIDEBAR_DEFAULT_WIDTH,
+  SIDEBAR_MAX_WIDTH,
+  SIDEBAR_MIN_WIDTH,
+  SIDEBAR_WIDTH_STORAGE_KEY,
+} from "@/lib/constants";
+import { useResizableWidth } from "@/lib/hooks/use-resizable-width.hook";
 import { useConnection } from "@/lib/providers/connection-provider";
 import { useGetDatabases } from "@/lib/services/database/database.service";
 import type { Database } from "@compooss/types";
-import { Button, DatabaseSidebarSkeleton, IconButton, Input } from "@compooss/ui";
+import {
+  Button,
+  cn,
+  DatabaseSidebarSkeleton,
+  IconButton,
+  Input,
+} from "@compooss/ui";
 import { AlertTriangle, Plus, RefreshCw, Search } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
@@ -25,6 +38,12 @@ export const Sidebar: React.FC = () => {
   const [expandedDbNames, setExpandedDbNames] = useState<Set<string>>(
     () => new Set(),
   );
+  const { width, isResizing, startResize, resetWidth } = useResizableWidth({
+    storageKey: SIDEBAR_WIDTH_STORAGE_KEY,
+    defaultWidth: SIDEBAR_DEFAULT_WIDTH,
+    minWidth: SIDEBAR_MIN_WIDTH,
+    maxWidth: SIDEBAR_MAX_WIDTH,
+  });
 
   const handleToggleExpand = useCallback((dbName: string) => {
     setExpandedDbNames((prev) => {
@@ -51,7 +70,24 @@ export const Sidebar: React.FC = () => {
 
   return (
     <>
-      <div className="w-64 bg-sidebar border-r border-border flex flex-col shrink-0 h-full">
+      <div
+        className="relative bg-sidebar border-r border-border flex flex-col shrink-0 h-full"
+        style={{ width }}
+      >
+        {/* Resize handle */}
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize sidebar"
+          title="Drag to resize, double-click to reset"
+          className={cn(
+            "absolute top-0 right-0 z-10 h-full w-1 translate-x-1/2 cursor-col-resize transition-colors hover:bg-primary/50 hover:delay-150",
+            isResizing && "bg-primary/50",
+          )}
+          onMouseDown={startResize}
+          onDoubleClick={resetWidth}
+        />
+
         <div className="p-3 border-b border-border flex items-center justify-between">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Databases
