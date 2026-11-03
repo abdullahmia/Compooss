@@ -1,4 +1,5 @@
 export * from "./api";
+export * from "./auth";
 export * from "./collection";
 export * from "./connection";
 export * from "./constants";

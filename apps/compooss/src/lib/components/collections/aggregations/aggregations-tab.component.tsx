@@ -14,7 +14,9 @@ import { SavePipelineModal } from "@/lib/components/collections/aggregations/sav
 import { PipelineSettingsModal } from "@/lib/components/collections/aggregations/pipeline-settings.component";
 import { CreateViewModal } from "@/lib/components/collections/aggregations/create-view-modal.component";
 
-export const AggregationsTab: React.FC = () => {
+type Props = { readOnly?: boolean };
+
+export const AggregationsTab: React.FC<Props> = ({ readOnly = false }) => {
   const params = useParams();
   const dbName = (params?.dbName as string) ?? "";
   const collectionName = (params?.collectionName as string) ?? "";
@@ -50,7 +52,7 @@ export const AggregationsTab: React.FC = () => {
         onOpenSave={() => setSaveModalOpen(true)}
         onOpenLoad={() => setLoadModalOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
-        onOpenCreateView={() => setCreateViewOpen(true)}
+        onOpenCreateView={readOnly ? undefined : () => setCreateViewOpen(true)}
       />
 
       <PanelGroup direction="vertical" className="flex-1">

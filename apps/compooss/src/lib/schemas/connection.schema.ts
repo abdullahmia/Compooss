@@ -40,6 +40,7 @@ export const ConnectionFormSchema = z.object({
   connectionString: z.string().min(1, "Connection string is required"),
   connectionName: z.string().min(1, "Connection name is required"),
   isFavorite: z.boolean(),
+  readOnly: z.boolean().optional(),
   color: z.string().optional(),
   label: z.string().optional(),
 

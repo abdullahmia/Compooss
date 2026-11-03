@@ -1,9 +1,81 @@
 import { ObjectId, type Db, type Document } from "mongodb";
-import { connectionManager } from "@/lib/driver/connection-manager";
+import type { MongoDriver } from "@/lib/driver/mongodb.driver";
+import { hasWriteStage, READ_ONLY_MESSAGE } from "@/lib/utils/read-only.util";
 import type { ShellResponse, ShellResponseType } from "@compooss/types";
 
 interface EvalContext {
   database: string;
+  /** The requesting browser's connection. */
+  driver: MongoDriver;
+  rawUri: string | null;
+  readOnly: boolean;
+}
+
+// What a read-only connection may run. Anything not listed is blocked, so new
+// write methods or commands are refused by default.
+const READ_ONLY_COLLECTION_METHODS = new Set([
+  "find",
+  "findOne",
+  "countDocuments",
+  "estimatedDocumentCount",
+  "distinct",
+  "aggregate",
+  "getIndexes",
+  "indexes",
+  "stats",
+]);
+
+const READ_ONLY_DB_METHODS = new Set([
+  "getCollectionNames",
+  "getCollectionInfos",
+  "stats",
+  "serverStatus",
+  "hostInfo",
+  "currentOp",
+  "listCommands",
+  "getMongo",
+  "getName",
+  "runCommand",
+  "adminCommand",
+]);
+
+const READ_ONLY_COMMANDS = new Set([
+  "aggregate",
+  "buildInfo",
+  "collStats",
+  "connectionStatus",
+  "count",
+  "currentOp",
+  "dbStats",
+  "distinct",
+  "explain",
+  "find",
+  "getCmdLineOpts",
+  "getLog",
+  "getParameter",
+  "hello",
+  "hostInfo",
+  "isMaster",
+  "listCollections",
+  "listCommands",
+  "listDatabases",
+  "listIndexes",
+  "ping",
+  "replSetGetStatus",
+  "rolesInfo",
+  "serverStatus",
+  "usersInfo",
+]);
+
+function readOnlyError(operation: string): Error {
+  return new Error(`${operation} is blocked. ${READ_ONLY_MESSAGE}`);
+}
+
+function assertReadOnlyCommand(command: Document): void {
+  const name = Object.keys(command)[0] ?? "";
+  if (!READ_ONLY_COMMANDS.has(name) || hasWriteStage(command.pipeline)) {
+    throw readOnlyError(`The "${name}" command`);
+  }
 }
 
 function makeResponse(
@@ -148,7 +220,16 @@ async function execCollectionMethod(
   collectionName: string,
   method: string,
   args: unknown[],
+  readOnly: boolean,
 ): Promise<unknown> {
+  if (
+    readOnly &&
+    (!READ_ONLY_COLLECTION_METHODS.has(method) ||
+      (method === "aggregate" && hasWriteStage(args[0])))
+  ) {
+    throw readOnlyError(`${method}()`);
+  }
+
   const col = db.collection(collectionName);
 
   switch (method) {
@@ -311,8 +392,16 @@ async function execDbMethod(
   db: Db,
   method: string,
   args: unknown[],
-  database: string,
+  ctx: EvalContext,
 ): Promise<{ result: unknown; switchDb?: string }> {
+  const { database } = ctx;
+  if (ctx.readOnly) {
+    if (!READ_ONLY_DB_METHODS.has(method)) throw readOnlyError(`db.${method}()`);
+    if ((method === "runCommand" || method === "adminCommand") && args[0]) {
+      assertReadOnlyCommand(args[0] as Document);
+    }
+  }
+
   switch (method) {
     case "getCollectionNames": {
       const cols = await db.listCollections().toArray();
@@ -333,7 +422,7 @@ async function execDbMethod(
       return { result };
     }
     case "serverStatus": {
-      const admin = await connectionManager.getActiveDriver().getAdmin();
+      const admin = await ctx.driver.getAdmin();
       const result = await admin.serverStatus();
       return { result };
     }
@@ -362,7 +451,7 @@ async function execDbMethod(
       return { result };
     }
     case "getMongo": {
-      const rawUri = connectionManager.getRawUri() ?? "";
+      const rawUri = ctx.rawUri ?? "";
       return { result: rawUri.replace(/:([^@]+)@/, ":****@") };
     }
     case "getName": {
@@ -389,7 +478,7 @@ async function handleHelperCommand(
   const start = performance.now();
 
   if (/^show\s+(dbs|databases)\s*$/i.test(trimmed)) {
-    const dbs = await connectionManager.getActiveDriver().listDatabases();
+    const dbs = await ctx.driver.listDatabases();
     const result = dbs.map((d) => ({
       name: d.name,
       sizeOnDisk: d.sizeOnDisk,
@@ -398,32 +487,32 @@ async function handleHelperCommand(
   }
 
   if (/^show\s+collections\s*$/i.test(trimmed)) {
-    const db = await connectionManager.getActiveDriver().getDb(ctx.database);
+    const db = await ctx.driver.getDb(ctx.database);
     const cols = await db.listCollections().toArray();
     const names = cols.map((c) => c.name).sort();
     return makeResponse("result", names, ctx.database, performance.now() - start);
   }
 
   if (/^show\s+users\s*$/i.test(trimmed)) {
-    const db = await connectionManager.getActiveDriver().getDb(ctx.database);
+    const db = await ctx.driver.getDb(ctx.database);
     const result = await db.command({ usersInfo: 1 });
     return makeResponse("result", result.users, ctx.database, performance.now() - start);
   }
 
   if (/^show\s+roles\s*$/i.test(trimmed)) {
-    const db = await connectionManager.getActiveDriver().getDb(ctx.database);
+    const db = await ctx.driver.getDb(ctx.database);
     const result = await db.command({ rolesInfo: 1, showBuiltinRoles: true });
     return makeResponse("result", result.roles, ctx.database, performance.now() - start);
   }
 
   if (/^show\s+profile\s*$/i.test(trimmed)) {
-    const db = await connectionManager.getActiveDriver().getDb(ctx.database);
+    const db = await ctx.driver.getDb(ctx.database);
     const result = await db.collection("system.profile").find().limit(5).toArray();
     return makeResponse("result", result, ctx.database, performance.now() - start);
   }
 
   if (/^show\s+log\s*$/i.test(trimmed) || /^show\s+logs\s*$/i.test(trimmed)) {
-    const admin = await connectionManager.getActiveDriver().getAdmin();
+    const admin = await ctx.driver.getAdmin();
     const result = await admin.command({ getLog: "global" });
     return makeResponse("result", result, ctx.database, performance.now() - start);
   }
@@ -503,7 +592,7 @@ export async function evaluateShellCommand(
     const helperResult = await handleHelperCommand(trimmed, ctx);
     if (helperResult) return helperResult;
 
-    const db = await connectionManager.getActiveDriver().getDb(ctx.database);
+    const db = await ctx.driver.getDb(ctx.database);
 
     if (/^db\s*$/i.test(trimmed)) {
       return makeResponse("result", ctx.database, ctx.database, performance.now() - start);
@@ -513,7 +602,13 @@ export async function evaluateShellCommand(
     if (colMethodMatch) {
       const [, collectionName, method, rawArgs] = colMethodMatch;
       const args = parseArgs(rawArgs);
-      const result = await execCollectionMethod(db, collectionName, method, args);
+      const result = await execCollectionMethod(
+        db,
+        collectionName,
+        method,
+        args,
+        ctx.readOnly,
+      );
       return makeResponse(
         "result",
         serializeResult(result),
@@ -526,12 +621,7 @@ export async function evaluateShellCommand(
     if (dbMethodMatch) {
       const [, method, rawArgs] = dbMethodMatch;
       const args = parseArgs(rawArgs);
-      const { result, switchDb } = await execDbMethod(
-        db,
-        method,
-        args,
-        ctx.database,
-      );
+      const { result, switchDb } = await execDbMethod(db, method, args, ctx);
       if (switchDb) {
         return makeResponse("switchDb", result, switchDb, performance.now() - start);
       }
@@ -544,7 +634,7 @@ export async function evaluateShellCommand(
     }
 
     // Attempt JS evaluation with db context as a last resort
-    const jsResult = await evalWithContext(trimmed, db, ctx.database);
+    const jsResult = await evalWithContext(trimmed, db, ctx);
     return makeResponse(
       "result",
       serializeResult(jsResult),
@@ -561,8 +651,9 @@ export async function evaluateShellCommand(
 async function evalWithContext(
   code: string,
   db: Db,
-  dbName: string,
+  ctx: EvalContext,
 ): Promise<unknown> {
+  const dbName = ctx.database;
   const collectionNames = (await db.listCollections().toArray()).map(
     (c) => c.name,
   );
@@ -578,7 +669,7 @@ async function evalWithContext(
       {
         get(_, method: string) {
           return async (...args: unknown[]) =>
-            execCollectionMethod(db, name, method, args);
+            execCollectionMethod(db, name, method, args, ctx.readOnly);
         },
       },
     );

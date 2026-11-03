@@ -11,10 +11,29 @@ import {
 } from "@/lib/utils/connection.util";
 import { MongoDriver } from "./mongodb.driver";
 
+type Session = {
+  driver: MongoDriver;
+  uri: string;
+  readOnly: boolean;
+  lastUsedAt: number;
+};
+
+/** Connections unused for this long are closed, e.g. from browsers that never disconnected. */
+const SESSION_IDLE_TIMEOUT_MS = 24 * 60 * 60 * 1000;
+const IDLE_SWEEP_INTERVAL_MS = 10 * 60 * 1000;
+
+/**
+ * Holds one MongoDB connection per browser session (see session.util.ts), so
+ * people sharing a Compooss instance don't switch or close each other's
+ * connections.
+ */
 class ConnectionManager {
   private static _instance: ConnectionManager | null = null;
-  private activeDriver: MongoDriver | null = null;
-  private activeUri: string | null = null;
+  private sessions = new Map<string, Session>();
+
+  constructor() {
+    setInterval(() => void this.closeIdleSessions(), IDLE_SWEEP_INTERVAL_MS).unref();
+  }
 
   static getInstance(): ConnectionManager {
     if (!ConnectionManager._instance) {
@@ -64,32 +83,36 @@ class ConnectionManager {
   }
 
   async connect(
+    sessionId: string,
     uri: string,
     options?: MongoClientOptions,
+    readOnly = false,
   ): Promise<ConnectionStatus> {
-    if (this.activeDriver) {
-      await this.disconnect();
-    }
+    await this.disconnect(sessionId);
 
     const { driver, uri: connectedUri } = await this.openDriver(uri, options);
-    this.activeDriver = driver;
-    this.activeUri = connectedUri;
+    this.sessions.set(sessionId, {
+      driver,
+      uri: connectedUri,
+      readOnly,
+      lastUsedAt: Date.now(),
+    });
 
     const serverInfo = await driver.getServerInfo();
     return {
       connected: true,
       maskedUri: maskUri(connectedUri),
+      readOnly,
       ...(connectedUri !== uri && { resolvedUri: connectedUri }),
       serverInfo,
     };
   }
 
-  async disconnect(): Promise<void> {
-    if (this.activeDriver) {
-      await this.activeDriver.disconnect();
-      this.activeDriver = null;
-      this.activeUri = null;
-    }
+  async disconnect(sessionId: string | null): Promise<void> {
+    const session = sessionId ? this.sessions.get(sessionId) : undefined;
+    if (!session) return;
+    this.sessions.delete(sessionId!);
+    await session.driver.disconnect();
   }
 
   async testConnection(
@@ -119,38 +142,58 @@ class ConnectionManager {
     }
   }
 
-  getActiveDriver(): MongoDriver {
-    if (!this.activeDriver) {
+  /** Looks up a session and marks it as recently used. */
+  private getSession(sessionId: string | null): Session | undefined {
+    const session = sessionId ? this.sessions.get(sessionId) : undefined;
+    if (session) session.lastUsedAt = Date.now();
+    return session;
+  }
+
+  getActiveDriver(sessionId: string | null): MongoDriver {
+    const session = this.getSession(sessionId);
+    if (!session) {
       throw new Error("No active MongoDB connection. Connect first.");
     }
-    return this.activeDriver;
+    return session.driver;
   }
 
-  isConnected(): boolean {
-    return this.activeDriver !== null;
+  isReadOnly(sessionId: string | null): boolean {
+    return this.getSession(sessionId)?.readOnly ?? false;
   }
 
-  getStatus(): ConnectionStatus {
-    if (!this.activeDriver || !this.activeUri) {
+  getStatus(sessionId: string | null): ConnectionStatus {
+    const session = this.getSession(sessionId);
+    if (!session) {
       return { connected: false };
     }
     return {
       connected: true,
-      maskedUri: maskUri(this.activeUri),
+      maskedUri: maskUri(session.uri),
+      readOnly: session.readOnly,
     };
   }
 
-  getRawUri(): string | null {
-    return this.activeUri;
+  getRawUri(sessionId: string | null): string | null {
+    return this.getSession(sessionId)?.uri ?? null;
+  }
+
+  private async closeIdleSessions(): Promise<void> {
+    const cutoff = Date.now() - SESSION_IDLE_TIMEOUT_MS;
+    for (const [sessionId, session] of this.sessions) {
+      if (session.lastUsedAt < cutoff) {
+        await this.disconnect(sessionId).catch(() => {});
+      }
+    }
   }
 }
 
+// Stored on globalThis so every route bundle and dev reload shares one instance.
 const globalForConn = globalThis as unknown as {
-  __compooss_connection_manager?: ConnectionManager;
+  __compooss_session_connections?: ConnectionManager;
 };
 
 export const connectionManager =
-  globalForConn.__compooss_connection_manager ??
+  globalForConn.__compooss_session_connections ??
   ConnectionManager.getInstance();
 
-globalForConn.__compooss_connection_manager = connectionManager;
+globalForConn.__compooss_session_connections = connectionManager;

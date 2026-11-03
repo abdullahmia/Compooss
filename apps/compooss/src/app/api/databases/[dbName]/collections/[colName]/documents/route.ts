@@ -1,7 +1,8 @@
 import { isProtectedDatabase } from "@compooss/types";
 import { documentRepository } from "@/lib/core-modules/document/document.repository";
 import { createApiResponse } from "@/lib/utils/api-response.util";
-import { protectedDbResponse } from "@/lib/utils/api-route.util";
+import { isReadOnlySession } from "@/lib/utils/session.util";
+import { protectedDbResponse, readOnlyResponse } from "@/lib/utils/api-route.util";
 import { NextResponse, type NextRequest } from "next/server";
 
 type DocParams = { params: Promise<{ dbName: string; colName: string }> };
@@ -88,6 +89,7 @@ export async function POST(req: Request, { params }: DocParams) {
   try {
     const { dbName, colName } = await params;
     if (isProtectedDatabase(dbName)) return protectedDbResponse();
+    if (await isReadOnlySession()) return readOnlyResponse();
     const body = await req.json();
     const document = body?.document ?? body;
     const inserted = await documentRepository.addDocument({

@@ -26,7 +26,8 @@ type Props = {
   onOpenSave: () => void;
   onOpenLoad: () => void;
   onOpenSettings: () => void;
-  onOpenCreateView: () => void;
+  /** Omitted when the connection or database is read-only. */
+  onOpenCreateView?: () => void;
 };
 
 export const PipelineToolbar: React.FC<Props> = ({
@@ -215,14 +216,16 @@ export const PipelineToolbar: React.FC<Props> = ({
 
         <div className="w-px h-5 bg-border mx-1" />
 
-        <IconButton
-          variant="default"
-          size="sm"
-          icon={<Eye className="h-3.5 w-3.5" />}
-          label="Create View"
-          onClick={onOpenCreateView}
-          disabled={pipeline.stages.length === 0 || pipeline.hasErrors}
-        />
+        {onOpenCreateView && (
+          <IconButton
+            variant="default"
+            size="sm"
+            icon={<Eye className="h-3.5 w-3.5" />}
+            label="Create View"
+            onClick={onOpenCreateView}
+            disabled={pipeline.stages.length === 0 || pipeline.hasErrors}
+          />
+        )}
 
         <IconButton
           variant="default"

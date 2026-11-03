@@ -4,7 +4,7 @@ Shared guidance for all AI coding agents (Claude Code, OpenAI Codex, Cursor, Cop
 
 ## What is Compooss?
 
-A self-hosted, browser-based MongoDB GUI. Runs as a Docker container alongside MongoDB — no cloud account needed. MongoDB URIs are entered in the UI and stored in IndexedDB; there are no environment variables to configure.
+A self-hosted, browser-based MongoDB GUI. Runs as a Docker container alongside MongoDB — no cloud account needed. MongoDB URIs are entered in the UI and stored in IndexedDB. The only environment variables are the optional `COMPOOSS_USERNAME` / `COMPOOSS_PASSWORD`, which turn on a login page (enforced in `src/proxy.ts`).
 
 ## Commands
 
@@ -76,7 +76,7 @@ Repositories are used server-side in API routes only — never imported on the c
 
 ### Connection Management (Two Separate Systems)
 
-- **`ConnectionManager`** (server-side singleton on `global`): holds live Node.js MongoDB connections across API requests
+- **`ConnectionManager`** (server-side singleton on `global`): holds one live MongoDB connection per browser, keyed by the `compooss_session` cookie (`lib/utils/session.util.ts`). Repositories resolve the caller's driver through `BaseRepository.getDriver()`; never assume a single global connection
 - **`connectionDB`** (`lib/storage/`) (browser IndexedDB via `idb`): persists saved connection profiles
 - **`ConnectionProvider`** bridges these — React context reads from IndexedDB; API calls use ConnectionManager
 
@@ -101,6 +101,8 @@ URI passwords are masked before being sent to the frontend.
 Use `createApiResponse(data, message, status)` from `lib/utils/`.
 
 **Protected databases** — `admin`, `config`, `local` are read-only; use `isProtectedDatabase(dbName)` in route handlers to return 403 on write attempts.
+
+**Read-only connections** — a saved connection can be marked read-only. Every write route must also check `if (await isReadOnlySession()) return readOnlyResponse();`, and the shell only allows the read methods/commands listed in `shell.evaluator.ts`.
 
 **Next.js 15 params** — route params are Promises; always `await params` before destructuring:
 ```typescript

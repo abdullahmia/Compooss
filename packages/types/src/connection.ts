@@ -63,6 +63,8 @@ export interface SavedConnection {
   authConfig?: AuthConfig;
   tlsConfig?: TlsConfig;
   advancedConfig?: AdvancedConfig;
+  /** Blocks every write (documents, indexes, collections, shell) on this connection. */
+  readOnly?: boolean;
 
   createdAt: string;
   lastUsedAt: string | null;
@@ -71,6 +73,7 @@ export interface SavedConnection {
 export interface ConnectionStatus {
   connected: boolean;
   maskedUri?: string;
+  readOnly?: boolean;
   resolvedUri?: string;
   serverInfo?: {
     version?: string;

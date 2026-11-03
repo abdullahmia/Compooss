@@ -4,7 +4,8 @@ import {
   csvToDocuments,
 } from "@/lib/core-modules/export/export.repository";
 import { createApiResponse } from "@/lib/utils/api-response.util";
-import { extractErrorMessage, protectedDbResponse } from "@/lib/utils/api-route.util";
+import { isReadOnlySession } from "@/lib/utils/session.util";
+import { extractErrorMessage, protectedDbResponse, readOnlyResponse } from "@/lib/utils/api-route.util";
 import { BSON } from "mongodb";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -23,6 +24,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     const { dbName, colName } = await params;
 
     if (isProtectedDatabase(dbName)) return protectedDbResponse();
+    if (await isReadOnlySession()) return readOnlyResponse();
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;

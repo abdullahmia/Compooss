@@ -4,7 +4,7 @@ import {
   ConnectionFormSchema,
   type TConnectionForm,
 } from "@/lib/schemas/connection.schema";
-import { Button, cn, Input } from "@compooss/ui";
+import { Button, cn, Input, Toggle } from "@compooss/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   CheckCircle2,
@@ -46,6 +46,7 @@ export const ConnectionForm: React.FC<Props> = ({
       connectionString: "mongodb://localhost:27017",
       connectionName: "",
       isFavorite: false,
+      readOnly: false,
       authType: "default",
       ...defaultValues,
     },
@@ -53,6 +54,7 @@ export const ConnectionForm: React.FC<Props> = ({
 
   const isFavorite = useWatch({ control: form.control, name: "isFavorite" });
   const colorValue = useWatch({ control: form.control, name: "color" });
+  const readOnly = useWatch({ control: form.control, name: "readOnly" });
   const connectionString = useWatch({
     control: form.control,
     name: "connectionString",
@@ -149,6 +151,23 @@ export const ConnectionForm: React.FC<Props> = ({
             <ColorPicker
               value={colorValue}
               onChange={(c) => form.setValue("color", c)}
+            />
+          </div>
+
+          {/* Read-only */}
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Read-only
+              </p>
+              <p className="text-[11px] text-muted-foreground/50 mt-0.5">
+                Block inserts, edits, deletes, and drops on this connection
+              </p>
+            </div>
+            <Toggle
+              label="Read-only"
+              checked={readOnly ?? false}
+              onChange={(checked) => form.setValue("readOnly", checked)}
             />
           </div>
         </div>

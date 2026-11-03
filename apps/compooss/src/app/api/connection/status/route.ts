@@ -1,5 +1,6 @@
 import { connectionManager } from "@/lib/driver/connection-manager";
 import { createApiResponse } from "@/lib/utils/api-response.util";
+import { getSessionId } from "@/lib/utils/session.util";
 import { connection, NextResponse } from "next/server";
 
 export async function GET() {
@@ -9,7 +10,7 @@ export async function GET() {
   await connection();
 
   try {
-    const status = connectionManager.getStatus();
+    const status = connectionManager.getStatus(await getSessionId());
     return NextResponse.json(
       createApiResponse(status, "Connection status retrieved", 200),
     );

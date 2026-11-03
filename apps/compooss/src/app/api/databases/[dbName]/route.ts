@@ -1,6 +1,8 @@
 import { isProtectedDatabase } from "@compooss/types";
 import { databaseRepository } from "@/lib/core-modules/database/database.repository";
 import { createApiResponse } from "@/lib/utils/api-response.util";
+import { isReadOnlySession } from "@/lib/utils/session.util";
+import { readOnlyResponse } from "@/lib/utils/api-route.util";
 import { NextResponse } from "next/server";
 
 type RouteParams = { params: Promise<{ dbName?: string }> };
@@ -33,6 +35,7 @@ export async function GET(_req: Request, { params }: RouteParams) {
 }
 
 export async function DELETE(_req: Request, { params }: RouteParams) {
+  if (await isReadOnlySession()) return readOnlyResponse();
   const { dbName } = await params;
   if (!dbName) {
     return NextResponse.json(

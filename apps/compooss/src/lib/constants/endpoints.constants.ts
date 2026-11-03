@@ -1,4 +1,9 @@
 export const ENDPOINTS = {
+  auth: {
+    login: "/auth/login",
+    logout: "/auth/logout",
+    session: "/auth/session",
+  },
   connection: {
     connect: "/connection/connect",
     disconnect: "/connection/disconnect",

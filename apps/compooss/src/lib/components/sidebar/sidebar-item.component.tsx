@@ -4,6 +4,7 @@ import { Badge, ConfirmDestructiveModal, IconButton } from "@compooss/ui";
 import { SidebarCollectionSkeleton } from "./sidebar-collection-skeleton.component";
 import { CreateCollectionModal } from "@/lib/components/collections/create-collection-modal.component";
 import { isProtectedDatabase } from "@compooss/types";
+import { useConnection } from "@/lib/providers/connection-provider";
 import { useDeleteDatabase } from "@/lib/services/database/database.service";
 import {
   useDeleteCollection,
@@ -33,7 +34,8 @@ export const SidebarItem: React.FC<Props> = ({
   onToggleExpand,
 }) => {
   const router = useRouter();
-  const isProtected = isProtectedDatabase(db.name);
+  const { isReadOnly } = useConnection();
+  const isProtected = isReadOnly || isProtectedDatabase(db.name);
 
   const [deleteDbModalOpen, setDeleteDbModalOpen] = useState(false);
   const [addCollectionModalOpen, setAddCollectionModalOpen] = useState(false);

@@ -1,10 +1,11 @@
 import { connectionManager } from "@/lib/driver/connection-manager";
 import { createApiResponse } from "@/lib/utils/api-response.util";
-import { NextResponse } from "next/server";
+import { getOrCreateSessionId } from "@/lib/utils/session.util";
+import { NextResponse, type NextRequest } from "next/server";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const { uri, options } = await req.json();
+    const { uri, options, readOnly } = await req.json();
 
     if (!uri || typeof uri !== "string") {
       return NextResponse.json(
@@ -13,7 +14,13 @@ export async function POST(req: Request) {
       );
     }
 
-    const status = await connectionManager.connect(uri, options);
+    const sessionId = await getOrCreateSessionId(req);
+    const status = await connectionManager.connect(
+      sessionId,
+      uri,
+      options,
+      readOnly === true,
+    );
     return NextResponse.json(
       createApiResponse(status, "Connected successfully", 200),
     );

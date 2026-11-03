@@ -1,6 +1,8 @@
 import { isProtectedDatabase } from "@compooss/types";
 import { collectionRepository } from "@/lib/core-modules/collection/collection.repository";
 import { createApiResponse } from "@/lib/utils/api-response.util";
+import { isReadOnlySession } from "@/lib/utils/session.util";
+import { readOnlyResponse } from "@/lib/utils/api-route.util";
 import { NextResponse, type NextRequest } from "next/server";
 
 interface DbParamProps {
@@ -36,6 +38,7 @@ export async function POST(req: NextRequest, { params }: DbParamProps) {
     );
   }
 
+  if (await isReadOnlySession()) return readOnlyResponse();
   let body: { collectionName?: string };
   try {
     body = await req.json();

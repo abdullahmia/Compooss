@@ -32,7 +32,7 @@ function getActiveDbNameFromPath(pathname: string): string | null {
 export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const activeDbName = getActiveDbNameFromPath(pathname ?? "");
-  const { activeConnection } = useConnection();
+  const { activeConnection, isReadOnly } = useConnection();
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState<boolean>(false);
   const [expandedDbNames, setExpandedDbNames] = useState<Set<string>>(
@@ -93,12 +93,14 @@ export const Sidebar: React.FC = () => {
             Databases
           </span>
           <div className="flex items-center gap-1">
-            <IconButton
-              variant="toolbar"
-              icon={<Plus className="h-3.5 w-3.5" />}
-              label="Create Database"
-              onClick={() => setOpen(true)}
-            />
+            {!isReadOnly && (
+              <IconButton
+                variant="toolbar"
+                icon={<Plus className="h-3.5 w-3.5" />}
+                label="Create Database"
+                onClick={() => setOpen(true)}
+              />
+            )}
             <IconButton
               variant="toolbar"
               icon={<RefreshCw className="h-3.5 w-3.5" />}

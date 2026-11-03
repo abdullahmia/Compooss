@@ -1,7 +1,8 @@
 import { isProtectedDatabase } from "@compooss/types";
 import { indexRepository } from "@/lib/core-modules/index/index.repository";
 import { createApiResponse } from "@/lib/utils/api-response.util";
-import { protectedDbResponse } from "@/lib/utils/api-route.util";
+import { isReadOnlySession } from "@/lib/utils/session.util";
+import { protectedDbResponse, readOnlyResponse } from "@/lib/utils/api-route.util";
 import { NextResponse } from "next/server";
 import type { IndexDefinition } from "@compooss/types";
 
@@ -40,6 +41,7 @@ export async function POST(req: Request, { params }: IndexParams) {
   try {
     const { dbName, colName } = await params;
     if (isProtectedDatabase(dbName)) return protectedDbResponse();
+    if (await isReadOnlySession()) return readOnlyResponse();
     const body = await req.json();
     const {
       fields,
