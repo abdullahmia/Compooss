@@ -1,0 +1,6 @@
+# Uploads Git LFS files: the desktop installers in apps/docs/public/downloads.
+if command -v git-lfs >/dev/null 2>&1; then
+  git lfs pre-push "$@"
+else
+  echo "Git LFS is not installed, so LFS files were not uploaded. Install it with: brew install git-lfs"
+fi

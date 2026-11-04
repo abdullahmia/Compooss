@@ -19,8 +19,8 @@ export const Features: React.FC = () => {
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-zinc-400">
             Compooss gives developers a fast, visual MongoDB client that fits
-            into any Docker Compose workflow — no desktop apps, no cloud
-            services, no complex setup.
+            into any Docker Compose workflow or runs as a desktop app — no
+            cloud services, no complex setup.
           </p>
         </AnimatedSection>
 
