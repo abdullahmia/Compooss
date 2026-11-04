@@ -1,7 +1,7 @@
 {
   "name": "compooss-monorepo",
   "private": true,
-  "version": "1.21.0",
+  "version": "1.22.0",
   "packageManager": "bun@1.3.8",
   "workspaces": [
     "apps/*",

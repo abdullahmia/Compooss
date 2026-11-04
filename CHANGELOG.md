@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.22.0](https://github.com/abdullahmia/Compooss/compare/v1.21.0...v1.22.0) (2026-11-04)
+
+
+### Features
+
+* add desktop app ([99d4dd2](https://github.com/abdullahmia/Compooss/commit/99d4dd21072272e7c2703019192f691348a75a17))
+* **desktop:** add a Tauri desktop app for macOS, Windows and Linux ([487bf7a](https://github.com/abdullahmia/Compooss/commit/487bf7a82595795472f6a376ef04c7d71a2c7ac9))
+* **docs:** offer desktop app downloads on the landing page ([71a5335](https://github.com/abdullahmia/Compooss/commit/71a5335340de281ad865ff0f9f4b28ea5d7eaea9))
+
+
+### Bug Fixes
+
+* **proxy:** check login on API paths that end in a file extension ([39cb92b](https://github.com/abdullahmia/Compooss/commit/39cb92b721c138b196c5e53f687d3b296d33b279))
+
 ## [1.21.0](https://github.com/abdullahmia/Compooss/compare/v1.20.0...v1.21.0) (2026-11-03)
 
 
