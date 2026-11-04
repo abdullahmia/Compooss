@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
-
 @import "tailwindcss";
 @source "../../../../packages/ui/src";
 
@@ -138,7 +136,7 @@
   --tab-inactive: 200 20% 95%;
   --query-bar: 200 20% 96%;
 
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
 }
 
 .dark {
@@ -199,7 +197,7 @@
    RETRO — warm amber vintage terminal · sharp corners · monospace
    ════════════════════════════════════════════════════════════════ */
 [data-theme="retro"] {
-  font-family: 'Source Code Pro', monospace;
+  font-family: var(--font-source-code-pro), monospace;
   --radius: 0.125rem;
   --background: 38 44% 92%;
   --foreground: 25 30% 18%;
@@ -709,7 +707,7 @@
 
 /* ── Tokens: light ── */
 [data-theme="glass"] {
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter",
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter),
     system-ui, sans-serif;
   --radius: 0.875rem;
   /* --card pure white so alpha-0.15 gives nearly-transparent frosted white */
@@ -893,7 +891,7 @@
 }
 
 .font-mono {
-  font-family: 'Source Code Pro', monospace;
+  font-family: var(--font-source-code-pro), monospace;
 }
 
 .scrollbar-thin::-webkit-scrollbar {

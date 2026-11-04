@@ -1,5 +1,6 @@
 import { createApiResponse } from "@/lib/utils/api-response.util";
 import { AUTH_COOKIE, isAuthEnabled, verifyAuthToken } from "@/lib/utils/auth.util";
+import { handleDesktopRequest } from "@/lib/utils/desktop.util";
 import { NextResponse, type NextRequest } from "next/server";
 
 const PUBLIC_PATHS = new Set(["/login", "/api/auth/login"]);
@@ -7,8 +8,12 @@ const PUBLIC_PATHS = new Set(["/login", "/api/auth/login"]);
 /**
  * When COMPOOSS_USERNAME / COMPOOSS_PASSWORD are set, every page and API route
  * requires a valid login cookie. Without them the app stays open, as before.
+ * The desktop app's bundled server is locked to its own window first.
  */
 export function proxy(req: NextRequest) {
+  const desktopResponse = handleDesktopRequest(req);
+  if (desktopResponse) return desktopResponse;
+
   if (!isAuthEnabled()) return NextResponse.next();
 
   const { pathname, search } = req.nextUrl;
@@ -35,6 +40,9 @@ export function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|ico|webp|gif|txt)$).*)",
+    // Skips build assets, the self-hosted Monaco files and top-level files in
+    // public/. Only single-segment paths count as files, so API routes like
+    // /api/databases/x.png still go through the checks above.
+    "/((?!_next/static|_next/image|monaco/|favicon.ico|[^/]+\\.(?:png|jpg|jpeg|svg|ico|webp|gif|txt)$).*)",
   ],
 };

@@ -4,6 +4,7 @@ import { CollectionView } from "@/lib/components/collections/collection-view.com
 import { Sidebar } from "@/lib/components/sidebar/sidebar.component";
 import { ShellPanel } from "@/lib/components/shell/shell-panel.component";
 import { CommandPalette } from "@/lib/components/workspace/command-palette.component";
+import { DesktopBridge } from "@/lib/components/workspace/desktop-bridge.component";
 import { TopBar } from "@/lib/components/workspace/top-bar.component";
 import { WorkspaceTabBar } from "@/lib/components/workspace/workspace-tab-bar.component";
 import {
@@ -73,6 +74,7 @@ export const WorkspaceShell: React.FC<Props> = ({ children }) => {
         </div>
       </div>
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      <DesktopBridge />
     </div>
   );
 };

@@ -11,6 +11,7 @@ COPY package.json bun.lock ./
 # Copy package manifests for all workspaces (needed for bun install)
 COPY apps/compooss/package.json ./apps/compooss/
 COPY apps/docs/package.json ./apps/docs/
+COPY apps/desktop/package.json ./apps/desktop/
 COPY packages/types/package.json ./packages/types/
 COPY packages/ui/package.json ./packages/ui/
 

@@ -6,6 +6,7 @@ import {
   ChevronRight,
   Container,
   Database,
+  Download,
   ShieldCheck,
   Terminal,
   Zap,
@@ -108,6 +109,13 @@ export const Hero: React.FC = () => {
               >
                 <Container size={16} />
                 Docker Hub
+              </a>
+              <a
+                href="#download"
+                className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/50 px-7 py-3.5 text-sm font-medium text-zinc-300 transition-all hover:border-zinc-700 hover:bg-zinc-800/50 hover:text-white"
+              >
+                <Download size={16} />
+                Desktop App
               </a>
             </motion.div>
 

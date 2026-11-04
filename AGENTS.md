@@ -22,6 +22,11 @@ docker compose -f docker/docker-compose.dev.yml up -d  # Start dev MongoDB only
 # UI development
 bun storybook        # Storybook for @compooss/ui (port 6006)
 
+# Desktop app (needs Rust; see docs/DESKTOP.md)
+bun desktop:dev        # Desktop window on the Next.js dev server
+bun desktop:build      # Installers for this machine (--target <triple> for others)
+bun desktop:release    # Build all targets into apps/docs/public/downloads (landing page)
+
 # Docker
 bun run docker:build   # Build Docker image locally
 bun run docker:publish # Build and push multi-arch image
@@ -35,16 +40,17 @@ Commits must follow [Conventional Commits](https://www.conventionalcommits.org) 
 ## Monorepo Structure
 
 ```
-apps/compooss/       # Main Next.js 15 app
+apps/compooss/       # Main Next.js 16 app
+apps/desktop/        # Tauri desktop app: bundles Node + the compooss standalone server
 apps/docs/           # Landing / docs site
 packages/types/      # @compooss/types — shared TypeScript types (no JS output)
 packages/ui/         # @compooss/ui — shared shadcn/ui + Radix primitives
 docker/              # docker-compose files (dev and production)
 scripts/seed.ts      # Dev data seeder (Bun)
-docs/                # DEVELOPMENT.md, FEATURES.md, CONTRIBUTING.md, SHELL.md
+docs/                # DEVELOPMENT.md, FEATURES.md, CONTRIBUTING.md, SHELL.md, DESKTOP.md
 ```
 
-Turborepo builds `@compooss/types` and `@compooss/ui` before `apps/compooss`.
+Turborepo builds `@compooss/types` and `@compooss/ui` before `apps/compooss`. `apps/desktop` deliberately has no `build`/`dev`/`lint` scripts, so `bun build`, `bun dev` and the pre-commit hook never need Rust.
 
 ## Architecture
 
@@ -106,7 +112,7 @@ Use `createApiResponse(data, message, status)` from `lib/utils/`.
 
 **Read-only connections** — a saved connection can be marked read-only. Every write route must also check `if (await isReadOnlySession()) return readOnlyResponse();`, and the shell only allows the read methods/commands listed in `shell.evaluator.ts`.
 
-**Next.js 15 params** — route params are Promises; always `await params` before destructuring:
+**Next.js params** — route params are Promises; always `await params` before destructuring:
 ```typescript
 const { dbName, colName } = await params
 ```
@@ -115,13 +121,16 @@ const { dbName, colName } = await params
 
 **Zod schemas** — form validation schemas in `lib/schemas/`; types are inferred with `z.infer<typeof Schema>`. Never duplicate type definitions — derive them from schemas.
 
+**Desktop app** — the desktop app runs the same standalone server with `COMPOOSS_DESKTOP_TOKEN` set, which makes `src/proxy.ts` lock it to the app's window (`lib/utils/desktop.util.ts`). For anything browser-vs-desktop, go through `lib/platform/platform.ts`: save files with `saveFile()`, never Blob + `<a download>` (desktop webviews ignore it). Don't load scripts, fonts or styles from CDNs; the desktop app must work offline (Monaco is served from `public/monaco`, copied by `scripts/copy-monaco.ts`). Never change the desktop port (29017) or bundle identifier: saved connections in IndexedDB are tied to them.
+
 **Custom TanStack Query types** — use `TMutationOptions<TData, TVariables>` and `TQueryOptions<TData>` (which omit `mutationFn`/`queryFn`) when accepting options overrides.
 
 ## Tech Stack
 
 | Concern | Library |
 |---|---|
-| Framework | Next.js 15 (App Router, `output: "standalone"`) |
+| Framework | Next.js 16 (App Router, `output: "standalone"`) |
+| Desktop | Tauri v2 + bundled Node.js 24 sidecar |
 | Package manager | Bun 1.3.8 |
 | Monorepo | Turborepo + Bun workspaces |
 | UI primitives | shadcn/ui (Radix + Tailwind CSS 4.1) |

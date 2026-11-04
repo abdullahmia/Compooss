@@ -20,6 +20,7 @@ import {
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import type { UseAggregationPipeline } from "@/lib/components/collections/aggregations/use-aggregation-pipeline";
+import { saveFile } from "@/lib/platform/platform";
 
 type Props = {
   pipeline: UseAggregationPipeline;
@@ -63,17 +64,15 @@ export const PipelineToolbar: React.FC<Props> = ({
     setShowExportMenu(false);
   }, [pipeline]);
 
-  const handleDownloadJson = useCallback(() => {
+  const handleDownloadJson = useCallback(async () => {
     const json = pipeline.exportPipelineJson();
     if (!json) return;
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "pipeline.json";
-    a.click();
-    URL.revokeObjectURL(url);
     setShowExportMenu(false);
+    try {
+      await saveFile("pipeline.json", new Blob([json], { type: "application/json" }));
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not save pipeline.json.");
+    }
   }, [pipeline]);
 
   return (

@@ -1,6 +1,6 @@
 # Compooss
 
-> A lightweight, self-hosted MongoDB GUI that drops into any Docker stack — no desktop app, no cloud signup, no fuss.
+> A lightweight, self-hosted MongoDB GUI that drops into any Docker stack or runs as a desktop app — no cloud signup, no fuss.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/version-1.7.0-green.svg)](docs/CHANGELOG.md)
@@ -101,6 +101,19 @@ MONGO_ROOT_USERNAME=admin MONGO_ROOT_PASSWORD=secret \
   docker compose -f docker/docker-compose.yml up -d
 ```
 
+### Desktop app
+
+Prefer not to run a container? Compooss is also a desktop app for macOS, Windows and Linux. It bundles everything it needs and keeps your saved connections on your machine.
+
+| Platform | Download |
+|---|---|
+| macOS 13.5+ (Apple Silicon) | [Compooss-macos-arm64.dmg](https://compooss.dev/downloads/Compooss-macos-arm64.dmg) |
+| macOS 13.5+ (Intel) | [Compooss-macos-x64.dmg](https://compooss.dev/downloads/Compooss-macos-x64.dmg) |
+| Windows 10/11 (x64) | [Compooss-windows-x64-setup.exe](https://compooss.dev/downloads/Compooss-windows-x64-setup.exe) |
+| Linux (x86_64) | [AppImage](https://compooss.dev/downloads/Compooss-linux-x86_64.AppImage) · [.deb](https://compooss.dev/downloads/Compooss-linux-amd64.deb) |
+
+The builds aren't signed yet: on macOS use **System Settings → Privacy & Security → Open Anyway** after the first launch is blocked, and on Windows choose **More info → Run anyway**. See [`docs/DESKTOP.md`](docs/DESKTOP.md) for details and for building it yourself.
+
 ---
 
 ## Development Setup
@@ -140,6 +153,8 @@ Open **http://localhost:3000**, then connect to `mongodb://root:example@localhos
 | `bun build` | Build all packages and apps |
 | `bun lint` | Run ESLint across the monorepo |
 | `bun type-check` | Run TypeScript type checking |
+| `bun desktop:dev` | Run the desktop app against the dev server (needs Rust) |
+| `bun desktop:build` | Build desktop installers for this machine (see [`docs/DESKTOP.md`](docs/DESKTOP.md)) |
 
 See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for a deeper guide on the codebase and architecture.
 
@@ -150,7 +165,8 @@ See [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) for a deeper guide on the codeb
 ```
 compooss/
 ├── apps/
-│   ├── compooss/        # Main MongoDB GUI (Next.js 15)
+│   ├── compooss/        # Main MongoDB GUI (Next.js 16)
+│   ├── desktop/         # Desktop app (Tauri) that bundles the GUI
 │   └── docs/            # Landing page / documentation site
 ├── packages/
 │   ├── types/           # Shared TypeScript types (@compooss/types)

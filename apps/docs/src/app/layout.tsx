@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+// release-please bumps the version here on every release.
+import rootPackage from "../../../../package.json";
 import "./globals.css";
 
 const SITE_URL = "https://compooss.dev";
@@ -81,7 +83,7 @@ const jsonLd = {
   "@type": "SoftwareApplication",
   name: SITE_NAME,
   applicationCategory: "DeveloperApplication",
-  operatingSystem: "Docker",
+  operatingSystem: "Docker, macOS, Windows, Linux",
   description: DESCRIPTION,
   url: SITE_URL,
   offers: {
@@ -96,8 +98,11 @@ const jsonLd = {
   },
   license: "https://opensource.org/licenses/MIT",
   screenshot: `${SITE_URL}/preview.jpeg`,
-  softwareVersion: "1.1.0",
-  downloadUrl: "https://hub.docker.com/r/abdullahmia/compooss",
+  softwareVersion: rootPackage.version,
+  downloadUrl: [
+    "https://hub.docker.com/r/abdullahmia/compooss",
+    `${SITE_URL}/#download`,
+  ],
   codeRepository: "https://github.com/abdullahmia/compooss",
 };
 

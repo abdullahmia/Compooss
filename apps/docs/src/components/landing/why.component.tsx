@@ -48,10 +48,10 @@ export const Why: React.FC = () => {
             </span>
           </h2>
           <p className="mx-auto mt-5 max-w-2xl leading-relaxed text-zinc-400">
-            Most MongoDB GUIs are desktop apps that need installation,
-            configuration, and often a paid license. Compooss is the only one
-            purpose-built for Docker Compose — the way modern developers
-            actually work.
+            Most MongoDB GUIs need installation, configuration, and often a
+            paid license. Compooss is purpose-built for Docker Compose — the
+            way modern developers actually work — and is also a free desktop
+            app when you&apos;d rather not run a container.
           </p>
         </AnimatedSection>
 
@@ -73,8 +73,8 @@ export const Why: React.FC = () => {
                 </h3>
                 <p className="mb-6 max-w-sm text-sm leading-relaxed text-zinc-400">
                   Runs as a single container in your Compose stack. No
-                  separate install, no desktop app, no config files — just
-                  one service block in your existing setup.
+                  separate install, no config files — just one service block
+                  in your existing setup.
                 </p>
 
                 {/* Mini code preview */}
