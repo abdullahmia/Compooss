@@ -1,0 +1,50 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Compooss",
+  "version": "../../../package.json",
+  "identifier": "com.abdullahmia.compooss",
+  "build": {
+    "frontendDist": "../splash",
+    "devUrl": "http://localhost:29018",
+    "beforeDevCommand": { "script": "bun run dev --port 29018", "cwd": "../../compooss" }
+  },
+  "app": {
+    "windows": [],
+    "withGlobalTauri": false,
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "DeveloperTool",
+    "shortDescription": "MongoDB GUI",
+    "longDescription": "A fast MongoDB GUI for browsing, querying and managing your databases.",
+    "publisher": "Abdullah Mia",
+    "copyright": "Copyright (c) 2026 Abdullah Mia. MIT License.",
+    "homepage": "https://compooss.dev",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "13.5",
+      "signingIdentity": "-",
+      "hardenedRuntime": false,
+      "entitlements": "./Entitlements.plist"
+    },
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "installerHooks": "./windows/hooks.nsh"
+      }
+    },
+    "linux": {
+      "deb": { "section": "database" }
+    }
+  }
+}

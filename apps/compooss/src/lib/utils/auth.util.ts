@@ -36,7 +36,7 @@ export function isAuthConfigured(): boolean {
 }
 
 /** Constant-time comparison that also hides the length of the expected value. */
-function safeEqual(a: string, b: string): boolean {
+export function safeEqual(a: string, b: string): boolean {
   const hashA = createHash("sha256").update(a).digest();
   const hashB = createHash("sha256").update(b).digest();
   return timingSafeEqual(hashA, hashB);

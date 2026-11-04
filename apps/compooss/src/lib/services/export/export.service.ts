@@ -1,6 +1,7 @@
 "use client";
 
 import { ENDPOINTS } from "@/lib/constants";
+import { saveFile } from "@/lib/platform/platform";
 import type { TMutationOptions } from "@/lib/query.types";
 import { COLLECTION_QUERY_KEYS } from "@/lib/services/collections/collection-query.key";
 import { DOCUMENTS_QUERY_KEYS } from "@/lib/services/documents/documents-query.key";
@@ -20,7 +21,7 @@ export type ExportVariables = {
 };
 
 /**
- * Fetches the export file and triggers a browser download.
+ * Fetches the export file and saves it (browser download or desktop save dialog).
  * Uses raw fetch because the response is a binary/text file, not JSON.
  */
 export const useExportCollection = (
@@ -55,15 +56,7 @@ export const useExportCollection = (
         throw new Error(message);
       }
 
-      const blob = await res.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = objectUrl;
-      a.download = `${collection}-export.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(objectUrl);
+      await saveFile(`${collection}-export.${format}`, await res.blob());
     },
   });
 };

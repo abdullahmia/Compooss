@@ -41,6 +41,9 @@ storybook-static
 # Next.js
 next-env.d.ts
 
+# Monaco copied in by apps/compooss/scripts/copy-monaco.ts
+apps/compooss/public/monaco/
+
 # Misc
 .DS_Store
 *.pem

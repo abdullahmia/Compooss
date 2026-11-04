@@ -15,6 +15,12 @@ storybook-static
 # Turbo
 .turbo
 
+# Desktop app: only its package.json is needed (for bun install)
+apps/desktop/*
+!apps/desktop/package.json
+# Desktop installers served by the docs site
+apps/docs/public/downloads
+
 # Git
 .git
 .gitignore
