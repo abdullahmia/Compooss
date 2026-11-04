@@ -35,6 +35,9 @@ export function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|ico|webp|gif|txt)$).*)",
+    // Skips build assets and top-level files in public/. Only single-segment
+    // paths count as files, so API routes like /api/databases/x.png still go
+    // through the checks above.
+    "/((?!_next/static|_next/image|favicon.ico|[^/]+\\.(?:png|jpg|jpeg|svg|ico|webp|gif|txt)$).*)",
   ],
 };
