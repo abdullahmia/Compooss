@@ -39,7 +39,7 @@ export const JsonDocumentSkeleton: React.FC = () => {
         {["w-16", "w-24", "w-20", "w-28", "w-20"].map((keyWidth, i) => (
           <div key={i} className="flex items-start gap-2">
             <div className={`h-3.5 bg-muted rounded shrink-0 ${keyWidth}`} />
-            <span className="text-muted-foreground shrink-0">:</span>
+            <span className="text-muted-foreground font-mono text-xs shrink-0">:</span>
             <div className="h-3.5 bg-muted rounded flex-1 max-w-[200px]" />
           </div>
         ))}
@@ -107,7 +107,7 @@ function JsonValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
                 <span className="text-json-number font-mono text-xs mr-2">
                   {i}
                 </span>
-                <span className="text-muted-foreground mr-1">:</span>
+                <span className="text-muted-foreground font-mono text-xs mr-1">:</span>
                 <JsonValue value={item} depth={depth + 1} />
               </div>
             ))}
@@ -214,7 +214,7 @@ function JsonValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
             {keys.map((key) => (
               <div key={key} className="py-0.5">
                 <span className="text-json-key font-mono text-xs">{key}</span>
-                <span className="text-muted-foreground mx-1">:</span>
+                <span className="text-muted-foreground font-mono text-xs mx-1">:</span>
                 <JsonValue value={obj[key]} depth={depth + 1} />
               </div>
             ))}
@@ -339,11 +339,11 @@ export const JsonDocument: React.FC<Props> = ({
       {expanded && (
         <div className="px-5 py-4">
           {Object.entries(document).map(([key, value]) => (
-            <div key={key} className="py-0.5 flex items-start">
+            <div key={key} className="py-0.5 flex items-baseline">
               <span className="text-json-key font-mono text-xs min-w-[100px] shrink-0">
                 {key}
               </span>
-              <span className="text-muted-foreground mx-1.5">:</span>
+              <span className="text-muted-foreground font-mono text-xs mx-1.5">:</span>
               <JsonValue value={value} />
             </div>
           ))}
