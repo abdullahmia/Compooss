@@ -1,4 +1,4 @@
-import type { ComparisonRow } from "@/lib/types/landing.type";
+import type { ComparisonRow, DesktopPlatform } from "@/lib/types/landing.type";
 import {
   ArrowUpDown,
   Container,
@@ -20,6 +20,7 @@ export const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "Why Compooss", href: "#why-compooss" },
   { label: "Installation", href: "#installation" },
+  { label: "Download", href: "#download" },
   { label: "Usage", href: "#usage" },
   { label: "Roadmap", href: "#roadmap" },
 ];
@@ -143,6 +144,7 @@ export const COMPARISON_ROWS: ComparisonRow[] = [
   { feature: "Docker-native deployment", compooss: "yes", compass: "no", mongoExpress: "partial", studio3t: "no" },
   { feature: "Zero configuration", compooss: "yes", compass: "no", mongoExpress: "partial", studio3t: "no" },
   { feature: "Web-based (no install)", compooss: "yes", compass: "no", mongoExpress: "yes", studio3t: "no" },
+  { feature: "Desktop app (macOS, Windows, Linux)", compooss: "yes", compass: "yes", mongoExpress: "no", studio3t: "yes" },
   { feature: "Dark, light & system themes", compooss: "yes", compass: "partial", mongoExpress: "no", studio3t: "partial" },
   { feature: "Document CRUD", compooss: "yes", compass: "yes", mongoExpress: "yes", studio3t: "yes" },
   { feature: "Index management", compooss: "yes", compass: "yes", mongoExpress: "no", studio3t: "yes" },
@@ -195,5 +197,71 @@ export const USAGE_STEPS = [
     title: "Open and start exploring",
     description:
       "Navigate to localhost:6969 in your browser. Instantly browse databases, run queries, edit documents, and manage your MongoDB data through a visual interface.",
+  },
+];
+
+/**
+ * Desktop installers are uploaded by hand to Cloudflare R2, one folder per
+ * version, so each file is at <DESKTOP_DOWNLOADS_BASE_URL>/<version>/<file>.
+ * apps/desktop/scripts/release.ts writes the version and file names to
+ * desktop-release.json. See docs/DESKTOP.md.
+ *
+ * The R2 bucket's public URL (https://pub-<id>.r2.dev), without a trailing
+ * slash. While it's empty, every platform shows "Coming soon".
+ */
+export const DESKTOP_DOWNLOADS_BASE_URL: string = "";
+export const DESKTOP_CHECKSUMS_FILE = "SHA256SUMS.txt";
+
+export const DESKTOP_PLATFORMS: DesktopPlatform[] = [
+  {
+    os: "macos",
+    name: "macOS",
+    requirement: "macOS 13.5 or later",
+    downloads: [
+      { label: "Apple Silicon", id: "macos-arm64" },
+      { label: "Intel", id: "macos-x64" },
+    ],
+    steps: [
+      { text: "Open the downloaded .dmg and drag Compooss into Applications." },
+      {
+        text: "Open Compooss. The app isn't notarized yet, so the first time macOS may block it: go to System Settings → Privacy & Security and click Open Anyway.",
+      },
+      {
+        text: "Or allow it from Terminal:",
+        command: "xattr -dr com.apple.quarantine /Applications/Compooss.app",
+      },
+    ],
+  },
+  {
+    os: "windows",
+    name: "Windows",
+    requirement: "Windows 10 or 11, 64-bit",
+    downloads: [{ label: "Installer (.exe)", id: "windows-x64" }],
+    steps: [
+      { text: "Run the downloaded installer." },
+      {
+        text: "The installer isn't code-signed yet. If SmartScreen says it protected your PC, click More info → Run anyway.",
+      },
+      { text: "Open Compooss from the Start menu." },
+    ],
+  },
+  {
+    os: "linux",
+    name: "Linux",
+    requirement: "x86_64 · Ubuntu 22.04+, Debian 12+ or similar",
+    downloads: [
+      { label: "AppImage", id: "linux-x86_64" },
+      { label: "Debian / Ubuntu (.deb)", id: "linux-amd64" },
+    ],
+    steps: [
+      {
+        text: "AppImage: make it executable, then open it. Needs libfuse2.",
+        command: "chmod +x Compooss-{version}-linux-x86_64.AppImage",
+      },
+      {
+        text: "Debian or Ubuntu: install the .deb instead to get a menu entry.",
+        command: "sudo apt install ./Compooss-{version}-linux-amd64.deb",
+      },
+    ],
   },
 ];

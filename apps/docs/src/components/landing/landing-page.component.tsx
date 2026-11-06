@@ -1,3 +1,4 @@
+import { Download } from "./download.component";
 import { Features } from "./features.component";
 import { Footer } from "./footer.component";
 import { Hero } from "./hero.component";
@@ -17,6 +18,7 @@ export const LandingPage: React.FC = () => {
       <Nav />
       <Hero />
       <Installation />
+      <Download />
       <Features />
       <Why />
       <Usage />

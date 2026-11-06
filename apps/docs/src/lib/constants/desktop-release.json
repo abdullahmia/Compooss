@@ -1,0 +1,25 @@
+{
+  "version": "1.20.0",
+  "downloads": {
+    "macos-arm64": {
+      "file": "Compooss-1.20.0-macos-arm64.dmg",
+      "size": 50674747
+    },
+    "macos-x64": {
+      "file": "Compooss-1.20.0-macos-x64.dmg",
+      "size": 52928734
+    },
+    "windows-x64": {
+      "file": "Compooss-1.20.0-windows-x64-setup.exe",
+      "size": 31410065
+    },
+    "linux-x86_64": {
+      "file": "Compooss-1.20.0-linux-x86_64.AppImage",
+      "size": 130816504
+    },
+    "linux-amd64": {
+      "file": "Compooss-1.20.0-linux-amd64.deb",
+      "size": 58559726
+    }
+  }
+}
