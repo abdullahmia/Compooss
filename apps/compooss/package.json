@@ -3,8 +3,8 @@
   "private": true,
   "version": "1.7.0",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build",
+    "dev": "bun scripts/copy-monaco.ts && next dev --turbopack",
+    "build": "bun scripts/copy-monaco.ts && next build",
     "start": "next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit"
@@ -19,6 +19,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@monaco-editor/react": "^4.7.0",
     "@tanstack/react-query": "^5.90.21",
+    "@tauri-apps/api": "^2.12.4",
     "@xyflow/react": "^12.10.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -53,7 +54,7 @@
     "eslint": "^9.32.0",
     "eslint-config-next": "^16.1.6",
     "jsdom": "^20.0.3",
-    "monaco-editor": "^0.52.2",
+    "monaco-editor": "0.55.1",
     "playwright": "^1.58.2",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.8.3"

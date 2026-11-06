@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <!-- Source for `tauri icon`: the Compooss leaf on a macOS-style rounded square. -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22272b"/>
+      <stop offset="1" stop-color="#0d0f11"/>
+    </linearGradient>
+  </defs>
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#bg)"/>
+  <path fill="#ffffff" d="M512 236C585 312 650 410 652 530 654 640 594 716 512 748 430 716 370 640 372 530 374 410 439 312 512 236Z"/>
+  <path fill="#15191c" d="M512 378 521 700 503 700Z"/>
+  <rect x="502" y="700" width="20" height="96" rx="5" fill="#ffffff"/>
+</svg>
