@@ -5,6 +5,7 @@
  *   bun scripts/release.ts --minor | --major  bump that part instead
  *   bun scripts/release.ts --no-bump          rebuild the current version (e.g. after a failed build)
  *   bun scripts/release.ts --targets a,b      build only these target triples
+ *   bun scripts/release.ts --skip-server      reuse the server tree from the previous build
  *   bun scripts/release.ts --manifest-only    don't build; refresh the checksums and landing page
  *                                             manifest from what's in release/<version>/
  *
@@ -58,7 +59,7 @@ if (!hasFlag("manifest-only")) {
   mkdirSync(outDir, { recursive: true });
   targets.forEach((triple, index) => {
     // The server tree is the same for every target, so build it once.
-    const built = buildTarget(triple, { skipServer: index > 0 });
+    const built = buildTarget(triple, { skipServer: hasFlag("skip-server") || index > 0 });
     for (const { extension, suffix } of ARTIFACTS[triple]) {
       const source = built.find((file) => file.endsWith(extension));
       if (!source) throw new Error(`No ${extension} was built for ${triple}.`);

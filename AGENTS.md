@@ -23,6 +23,7 @@ docker compose -f docker/docker-compose.dev.yml up -d  # Start dev MongoDB only
 bun storybook        # Storybook for @compooss/ui (port 6006)
 
 # Desktop app (needs Rust; see docs/DESKTOP.md)
+bun desktop            # Interactive menu: develop, test build, release, rebuild, check setup
 bun desktop:dev        # Desktop window on the Next.js dev server
 bun desktop:build      # Installers for this machine (--target <triple> for others)
 bun desktop:release    # Bump the desktop version, build all targets into apps/desktop/release/<version>/ (uploaded to R2)

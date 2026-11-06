@@ -148,6 +148,7 @@ Open **http://localhost:3000**, then connect to `mongodb://root:example@localhos
 | `bun build` | Build all packages and apps |
 | `bun lint` | Run ESLint across the monorepo |
 | `bun type-check` | Run TypeScript type checking |
+| `bun desktop` | Menu for developing, building and releasing the desktop app (needs Rust) |
 | `bun desktop:dev` | Run the desktop app against the dev server (needs Rust) |
 | `bun desktop:build` | Build desktop installers for this machine (see [`docs/DESKTOP.md`](docs/DESKTOP.md)) |
 

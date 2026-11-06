@@ -76,6 +76,18 @@ apps/desktop/
 
 ---
 
+## The `bun desktop` menu
+
+```bash
+bun desktop
+```
+
+An interactive menu for everything below: develop, make a test build, release a new version (choose patch/minor/major and the platforms), rebuild platforms, refresh the manifest, open the release folder and check which platforms this Mac can build. Releases show each platform's progress live; the full output goes to `apps/desktop/release/logs/`. After a release it can open the folder for uploading to R2 and commit the new version files.
+
+It also works without the menu: `bun desktop dev`, `bun desktop build`, `bun desktop release [--minor | --major | --no-bump] [--yes]` and `bun desktop check`.
+
+---
+
 ## Development
 
 ```bash
