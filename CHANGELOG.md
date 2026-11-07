@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.23.0](https://github.com/abdullahmia/Compooss/compare/v1.22.0...v1.23.0) (2026-11-07)
+
+
+### Features
+
+* **desktop:** add a bun desktop menu for building and releasing ([76830a0](https://github.com/abdullahmia/Compooss/commit/76830a07942181dd259e7f78b8266b10b4f132f7))
+* **desktop:** add a Tauri desktop app for macOS, Windows and Linux ([1e0bce9](https://github.com/abdullahmia/Compooss/commit/1e0bce96331918ad2be22dda575acd0ad919520a))
+* **docs:** offer desktop app downloads on the landing page ([f4e1a7a](https://github.com/abdullahmia/Compooss/commit/f4e1a7a884a3c7aeeb66538eafdb68ccacd0c7e5))
+
+
+### Bug Fixes
+
+* align document fields in columns and remove the ER diagram ([86ba297](https://github.com/abdullahmia/Compooss/commit/86ba2972bccc4ce005d99cc5952904d0973d3cf3))
+* **documents:** align the colon with field names and values ([3a9d28c](https://github.com/abdullahmia/Compooss/commit/3a9d28c83267e006872ac0f346dcb1944ce08233))
+
+
+### Refactors
+
+* **desktop:** drop the Linux AppImage and ship the .deb only ([4b31a80](https://github.com/abdullahmia/Compooss/commit/4b31a806ae549bfd8c8ad3dfe6d1e01fa3d0ddd5))
+
 ## [1.22.0](https://github.com/abdullahmia/Compooss/compare/v1.21.0...v1.22.0) (2026-11-04)
 
 
