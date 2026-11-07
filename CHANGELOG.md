@@ -1,5 +1,37 @@
 # Changelog
 
+## [1.22.0](https://github.com/abdullahmia/Compooss/compare/v1.21.0...v1.22.0) (2026-11-04)
+
+
+### Features
+
+* add desktop app ([99d4dd2](https://github.com/abdullahmia/Compooss/commit/99d4dd21072272e7c2703019192f691348a75a17))
+* **desktop:** add a Tauri desktop app for macOS, Windows and Linux ([487bf7a](https://github.com/abdullahmia/Compooss/commit/487bf7a82595795472f6a376ef04c7d71a2c7ac9))
+* **docs:** offer desktop app downloads on the landing page ([71a5335](https://github.com/abdullahmia/Compooss/commit/71a5335340de281ad865ff0f9f4b28ea5d7eaea9))
+
+
+### Bug Fixes
+
+* **proxy:** check login on API paths that end in a file extension ([39cb92b](https://github.com/abdullahmia/Compooss/commit/39cb92b721c138b196c5e53f687d3b296d33b279))
+
+## [1.21.0](https://github.com/abdullahmia/Compooss/compare/v1.20.0...v1.21.0) (2026-11-03)
+
+
+### Features
+
+* add collection tabs and a command palette ([daaa991](https://github.com/abdullahmia/Compooss/commit/daaa991fe0788cd8a1227665963871462a26eccd))
+* add optional login, per-browser connections, and read-only mode ([a69a8e0](https://github.com/abdullahmia/Compooss/commit/a69a8e02c8fff6b5d06d71b956c03c1c651aab23))
+* add query history, bulk update/delete, collection actions, and performance view ([84688ea](https://github.com/abdullahmia/Compooss/commit/84688eacfd38d2a5c66a669b84209ad40d7e892a))
+* multi-user security, power-user workflows, and Docker connection fixes groups the work by theme ([b5ce34b](https://github.com/abdullahmia/Compooss/commit/b5ce34baeda96d81c88045db0366fb398ac90ed1))
+* **sidebar:** make sidebar width resizable via drag handle ([d2ec2a8](https://github.com/abdullahmia/Compooss/commit/d2ec2a8034c27f3be3addb1c91f3c6fc98160f39))
+
+
+### Bug Fixes
+
+* **connection:** render status route at request time so connection persists on reload ([b5b5a66](https://github.com/abdullahmia/Compooss/commit/b5b5a66c589e1532915a023181a508d9c3c5f489))
+* **connection:** resolve localhost URIs to the docker host when running in a container ([37aff48](https://github.com/abdullahmia/Compooss/commit/37aff48aebc5b771e5419df66ab05691809c84a2))
+* **connection:** save connections when Compooss is opened over plain HTTP ([3b83bc4](https://github.com/abdullahmia/Compooss/commit/3b83bc4d8fd5ed52eb1c57853a989a2fc446f3d4))
+
 ## [1.20.0](https://github.com/abdullahmia/compooss/compare/v1.19.0...v1.20.0) (2026-06-27)
 
 
