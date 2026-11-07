@@ -209,7 +209,7 @@ export const USAGE_STEPS = [
  * The R2 bucket's public URL (https://pub-<id>.r2.dev), without a trailing
  * slash. While it's empty, every platform shows "Coming soon".
  */
-export const DESKTOP_DOWNLOADS_BASE_URL: string = "";
+export const DESKTOP_DOWNLOADS_BASE_URL: string = "https://pub-bc459496547f4e2bb619f5b2942aa8e3.r2.dev";
 export const DESKTOP_CHECKSUMS_FILE = "SHA256SUMS.txt";
 
 export const DESKTOP_PLATFORMS: DesktopPlatform[] = [
