@@ -924,41 +924,6 @@
 [data-theme-transition="dark-to-light"]::view-transition-old(root) { z-index: 2; }
 [data-theme-transition="dark-to-light"]::view-transition-new(root) { z-index: 1; }
 
-/* ─── React Flow theme overrides ─────────────────────────────────────────── */
-/* React Flow uses var(--xy-foo, var(--xy-foo-default)) throughout its styles. */
-/* Setting --xy-foo (no -default suffix) on .react-flow always wins over the   */
-/* hardcoded -default values, so these single rules work for both themes.       */
-/* The app's CSS variables (--background, --card, etc.) automatically resolve  */
-/* to the correct light or dark values when the .dark class is active.          */
-.react-flow {
-  /* Canvas */
-  --xy-background-color: hsl(var(--background));
-  --xy-background-pattern-color: hsl(var(--border));
-
-  /* Controls panel */
-  --xy-controls-button-background-color: hsl(var(--card));
-  --xy-controls-button-background-color-hover: hsl(var(--muted));
-  --xy-controls-button-color: hsl(var(--foreground));
-  --xy-controls-button-color-hover: hsl(var(--foreground));
-  --xy-controls-button-border-color: hsl(var(--border));
-  --xy-controls-box-shadow: 0 0 0 1px hsl(var(--border));
-
-  /* Minimap */
-  --xy-minimap-background-color: hsl(var(--card));
-  --xy-minimap-mask-background-color: hsl(var(--background) / 0.65);
-  --xy-minimap-mask-stroke-color: hsl(var(--border));
-  --xy-minimap-node-background-color: hsl(var(--muted));
-  --xy-minimap-node-stroke-color: hsl(var(--border));
-
-  /* Edge labels */
-  --xy-edge-label-background-color: hsl(var(--card));
-  --xy-edge-label-color: hsl(var(--foreground));
-
-  /* Selection box */
-  --xy-selection-background-color: hsl(var(--primary) / 0.08);
-  --xy-selection-border: 1px dotted hsl(var(--primary) / 0.5);
-}
-
 /*
  * Chart series colors, in fixed categorical order (series keep their slot).
  * Validated for color-vision deficiency and contrast against the card

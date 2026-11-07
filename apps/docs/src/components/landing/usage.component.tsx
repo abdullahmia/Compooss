@@ -85,10 +85,6 @@ export const Usage: React.FC = () => {
                 "Choose Default, Relaxed, or Canonical Extended JSON format",
                 "Preserve BSON types (ObjectId, Long, Decimal128, Date) in exports",
                 "Import documents from JSON arrays or CSV files",
-                "Generate interactive ER diagrams from any database",
-                "Auto-detect collection relationships from ObjectId fields and names",
-                "Navigate and zoom interactive diagrams with ReactFlow",
-                "Visualize per-collection schema as a field diagram",
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3">
                   <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">

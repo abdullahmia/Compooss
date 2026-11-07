@@ -5,7 +5,6 @@ import {
   Database,
   Eye,
   FileJson,
-  GitBranch,
   Grid3X3,
   Layers,
   LayoutGrid,
@@ -116,12 +115,6 @@ export const FEATURES = [
     description:
       "Export any collection to JSON or CSV. JSON exports support three Extended JSON modes — Default, Relaxed, and Canonical — preserving BSON types like ObjectId, Long, and Decimal128. Import from JSON or CSV with drag-and-drop, live preview, and per-row error reporting.",
   },
-  {
-    icon: <GitBranch size={20} />,
-    title: "ER Diagram Generation",
-    description:
-      "Automatically visualize collection relationships as an interactive ER diagram. Detects foreign-key references from ObjectId fields and field names with configurable sample sizes. Powered by ReactFlow and Dagre for auto-layout.",
-  },
 ];
 
 export const CORE_FEATURES = [
@@ -129,7 +122,7 @@ export const CORE_FEATURES = [
   FEATURES[1],  // Collection Explorer
   FEATURES[4],  // Full Document CRUD
   FEATURES[14], // Data Export & Import
-  FEATURES[15], // ER Diagram Generation
+  FEATURES[7],  // Aggregation Pipelines
   FEATURES[9],  // Multiple Connections
 ];
 

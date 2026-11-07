@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatedSection } from "@/components/animated-section";
-import { ArrowUpDown, Check, Layers } from "lucide-react";
+import { ArrowUpDown, Check } from "lucide-react";
 
 export const Roadmap: React.FC = () => {
   const items = [
@@ -10,14 +10,6 @@ export const Roadmap: React.FC = () => {
       title: "Data Export & Import",
       description:
         "Export collections to JSON or CSV with optional filter and document limit. JSON exports support three Extended JSON modes — Default (legacy v1), Relaxed, and Canonical — to preserve BSON types like ObjectId, Long, Decimal128, and Dates. Import from JSON arrays or CSV with drag-and-drop, live preview, and per-row error reporting.",
-      status: "Shipped",
-      statusColor: "shipped",
-    },
-    {
-      icon: <Layers size={18} />,
-      title: "ER Diagram Generation",
-      description:
-        "Automatically generate interactive ER diagrams from any database. Detects foreign-key relationships by analyzing ObjectId field types and field-name patterns across all collections. Configurable sample size (100–5000 docs), auto-layout via Dagre, and confidence-level edge coloring.",
       status: "Shipped",
       statusColor: "shipped",
     },

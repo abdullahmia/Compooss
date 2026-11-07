@@ -6,7 +6,7 @@ import { useConnection } from "@/lib/providers/connection-provider";
 import { useGetCollections } from "@/lib/services/collections/collection.service";
 import { formatBytes } from "@/lib/utils";
 import { isProtectedDatabase, type Collection } from "@compooss/types";
-import { DatabaseBackupIcon, Plus, Share2, Table } from "lucide-react";
+import { DatabaseBackupIcon, Plus, Table } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -36,14 +36,6 @@ export const DatabaseView: React.FC<Props> = ({ dbName }) => {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <Link href={`/databases/${dbName}/diagram`}>
-                <Button
-                  variant="outline"
-                  icon={<Share2 className="h-3.5 w-3.5" />}
-                >
-                  ER Diagram
-                </Button>
-              </Link>
               {!readOnly && (
                 <Button
                   variant="primary"

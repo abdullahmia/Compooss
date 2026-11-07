@@ -142,5 +142,4 @@ const { dbName, colName } = await params
 | MongoDB | `mongodb` 7.1 (Node.js driver) |
 | Browser storage | `idb` (IndexedDB wrapper) |
 | Code editor | Monaco Editor |
-| Visual pipeline | XYFlow / @xyflow/react |
 | Theming | next-themes |

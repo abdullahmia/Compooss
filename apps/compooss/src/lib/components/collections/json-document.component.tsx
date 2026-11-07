@@ -15,7 +15,7 @@ import {
   Pencil,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Button, IconButton } from "@compooss/ui";
 import { toast } from "sonner";
 
@@ -60,6 +60,66 @@ type Props = {
   readOnly?: boolean;
 };
 
+/**
+ * Field names, colons and values in three columns, so every colon lines up
+ * and long values wrap within their own column. Rows align on the text
+ * baseline.
+ */
+function FieldGrid({
+  fields,
+  depth = 0,
+  keyClassName = "text-json-key",
+  minKeyWidth = false,
+}: {
+  fields: [string, unknown][];
+  depth?: number;
+  keyClassName?: string;
+  /** Keeps short top-level names from pulling the values too far left. */
+  minKeyWidth?: boolean;
+}) {
+  return (
+    <div
+      className={`grid items-baseline gap-y-1 font-mono text-xs ${
+        minKeyWidth
+          ? "grid-cols-[minmax(100px,max-content)_auto_minmax(0,1fr)]"
+          : "grid-cols-[max-content_auto_minmax(0,1fr)]"
+      }`}
+    >
+      {fields.map(([key, value]) => (
+        <Fragment key={key}>
+          <span className={`${keyClassName} max-w-[18rem] [overflow-wrap:anywhere]`}>{key}</span>
+          <span className="text-muted-foreground mx-1.5">:</span>
+          <div className="min-w-0 [overflow-wrap:anywhere]">
+            <JsonValue value={value} depth={depth} />
+          </div>
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
+/** "▸ Object(3)" toggle. Aligns on its text, not the chevron. */
+function ExpandButton({
+  expanded,
+  label,
+  onClick,
+}: {
+  expanded: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  const Chevron = expanded ? ChevronDown : ChevronRight;
+  return (
+    <button
+      onClick={onClick}
+      className="inline-flex items-baseline text-muted-foreground hover:text-foreground"
+    >
+      <Chevron className="h-3 w-3 self-center" />
+      <span className="text-xs font-mono ml-0.5">{label}</span>
+    </button>
+  );
+}
+
 function JsonValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
   const [expanded, setExpanded] = useState(depth < 0);
 
@@ -87,30 +147,18 @@ function JsonValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
       );
     return (
       <span>
-        <button
+        <ExpandButton
+          expanded={expanded}
+          label={`Array(${value.length})`}
           onClick={() => setExpanded(!expanded)}
-          className="inline-flex items-center text-muted-foreground hover:text-foreground"
-        >
-          {expanded ? (
-            <ChevronDown className="h-3 w-3" />
-          ) : (
-            <ChevronRight className="h-3 w-3" />
-          )}
-          <span className="text-xs font-mono ml-0.5">
-            Array({value.length})
-          </span>
-        </button>
+        />
         {expanded && (
-          <div className="ml-4 border-l border-border/50 pl-3">
-            {value.map((item, i) => (
-              <div key={i} className="py-0.5">
-                <span className="text-json-number font-mono text-xs mr-2">
-                  {i}
-                </span>
-                <span className="text-muted-foreground font-mono text-xs mr-1">:</span>
-                <JsonValue value={item} depth={depth + 1} />
-              </div>
-            ))}
+          <div className="ml-4 border-l border-border/50 pl-3 py-0.5">
+            <FieldGrid
+              fields={value.map((item, i) => [String(i), item])}
+              keyClassName="text-json-number"
+              depth={depth + 1}
+            />
           </div>
         )}
       </span>
@@ -196,28 +244,14 @@ function JsonValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
 
     return (
       <span>
-        <button
+        <ExpandButton
+          expanded={expanded}
+          label={`Object(${keys.length})`}
           onClick={() => setExpanded(!expanded)}
-          className="inline-flex items-center text-muted-foreground hover:text-foreground"
-        >
-          {expanded ? (
-            <ChevronDown className="h-3 w-3" />
-          ) : (
-            <ChevronRight className="h-3 w-3" />
-          )}
-          <span className="text-xs font-mono ml-0.5">
-            Object({keys.length})
-          </span>
-        </button>
+        />
         {expanded && (
-          <div className="ml-4 border-l border-border/50 pl-3">
-            {keys.map((key) => (
-              <div key={key} className="py-0.5">
-                <span className="text-json-key font-mono text-xs">{key}</span>
-                <span className="text-muted-foreground font-mono text-xs mx-1">:</span>
-                <JsonValue value={obj[key]} depth={depth + 1} />
-              </div>
-            ))}
+          <div className="ml-4 border-l border-border/50 pl-3 py-0.5">
+            <FieldGrid fields={keys.map((key) => [key, obj[key]])} depth={depth + 1} />
           </div>
         )}
       </span>
@@ -338,15 +372,7 @@ export const JsonDocument: React.FC<Props> = ({
 
       {expanded && (
         <div className="px-5 py-4">
-          {Object.entries(document).map(([key, value]) => (
-            <div key={key} className="py-0.5 flex items-baseline">
-              <span className="text-json-key font-mono text-xs min-w-[100px] shrink-0">
-                {key}
-              </span>
-              <span className="text-muted-foreground font-mono text-xs mx-1.5">:</span>
-              <JsonValue value={value} />
-            </div>
-          ))}
+          <FieldGrid fields={Object.entries(document)} minKeyWidth />
         </div>
       )}
 
