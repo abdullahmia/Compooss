@@ -97,27 +97,6 @@ docs: update development guide
 - Fill out the pull request template
 - Reference any related issues (`Closes #123`)
 - Describe what changed and why
-- Add the appropriate label (see [CI & Labels](#ci--labels) below)
-
----
-
-## CI & Labels
-
-This project uses GitHub Actions to automate builds and deployments. Workflows are triggered by labels added to pull requests.
-
-| Label | Effect |
-|---|---|
-| `app:compooss` | Triggers the **App Deploy** workflow for the Compooss app |
-
-### How to use labels
-
-1. Open your pull request.
-2. In the right-hand sidebar, click **Labels** and add the label that matches what your PR affects.
-3. The corresponding workflow will run automatically under the **Actions** tab.
-
-> **Note:** If a label is already on the PR when you push new commits, the workflow re-runs automatically on each push.
-
-If you are unsure which label to apply, leave a comment and a maintainer will add it for you.
 
 ---
 
