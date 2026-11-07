@@ -111,7 +111,7 @@ bun scripts/build.ts --debug
 bun desktop:build                                       # this machine
 bun desktop:build --target x86_64-apple-darwin          # Intel Mac (from Apple Silicon)
 bun desktop:build --target x86_64-pc-windows-msvc       # Windows NSIS installer, via cargo-xwin
-bun desktop:build --target x86_64-unknown-linux-gnu     # .deb + AppImage, via Docker
+bun desktop:build --target x86_64-unknown-linux-gnu     # .deb, via Docker
 bun desktop:build --skip-server                         # reuse the last server build
 ```
 
@@ -134,7 +134,6 @@ This bumps the version in `apps/desktop/package.json` and builds all four target
 - `Compooss-<version>-macos-arm64.dmg`
 - `Compooss-<version>-macos-x64.dmg`
 - `Compooss-<version>-windows-x64-setup.exe`
-- `Compooss-<version>-linux-x86_64.AppImage`
 - `Compooss-<version>-linux-amd64.deb`
 - `SHA256SUMS.txt`
 
@@ -164,4 +163,3 @@ To sign and notarize later, set `bundle.macOS.signingIdentity` to a Developer ID
 - **"Port 29017 is already in use"**: another program, or a stuck old server, holds the port. On macOS/Linux, `lsof -i :29017` finds it.
 - **The app shows "Open Compooss from the desktop app."**: the page was opened without the launch token, for example in a regular browser. That's the desktop lock working as intended.
 - **Blank window on Linux with Nvidia + Wayland**: start it with `WEBKIT_DISABLE_DMABUF_RENDERER=1`.
-- **AppImage won't start**: `chmod +x` it and install `libfuse2` (`libfuse2t64` on Ubuntu 24.04).

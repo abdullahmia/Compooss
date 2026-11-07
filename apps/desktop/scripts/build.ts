@@ -30,7 +30,7 @@ const WINDOWS_TRIPLE = "x86_64-pc-windows-msvc";
 const LINUX_BUILDER_IMAGE = "compooss-desktop-linux-builder";
 /** Separate from target/, so Linux and macOS builds don't overwrite each other. */
 const LINUX_TARGET_DIR = "target-linux";
-const BUNDLE_FILE = /\.(dmg|exe|deb|AppImage)$/;
+const BUNDLE_FILE = /\.(dmg|exe|deb)$/;
 
 type BuildOptions = { skipServer?: boolean; debug?: boolean };
 
@@ -58,7 +58,7 @@ export function buildTarget(triple: string, opts: BuildOptions = {}): string[] {
   const env = crossToWindows ? windowsCrossEnv() : rustEnv();
   if (triple !== hostTriple()) run(["rustup", "target", "add", triple], { env });
 
-  const bundles = triple.includes("apple") ? "app,dmg" : triple === WINDOWS_TRIPLE ? "nsis" : "deb,appimage";
+  const bundles = triple.includes("apple") ? "app,dmg" : triple === WINDOWS_TRIPLE ? "nsis" : "deb";
   run(
     [
       path.join(DESKTOP_DIR, "node_modules", ".bin", "tauri"),
@@ -146,7 +146,7 @@ function buildLinuxInDocker(opts: BuildOptions) {
     "--config",
     "src-tauri/tauri.bundle.conf.json",
     "--bundles",
-    "deb,appimage",
+    "deb",
     ...(opts.debug ? ["--debug"] : []),
   ]);
 }

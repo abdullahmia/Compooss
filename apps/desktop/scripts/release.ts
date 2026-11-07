@@ -35,10 +35,7 @@ const ARTIFACTS: Record<string, { id: string; extension: string; suffix: string 
   "x86_64-pc-windows-msvc": [
     { id: "windows-x64", extension: ".exe", suffix: "windows-x64-setup.exe" },
   ],
-  "x86_64-unknown-linux-gnu": [
-    { id: "linux-x86_64", extension: ".AppImage", suffix: "linux-x86_64.AppImage" },
-    { id: "linux-amd64", extension: ".deb", suffix: "linux-amd64.deb" },
-  ],
+  "x86_64-unknown-linux-gnu": [{ id: "linux-amd64", extension: ".deb", suffix: "linux-amd64.deb" }],
 };
 
 const fileName = (version: string, suffix: string) => `Compooss-${version}-${suffix}`;

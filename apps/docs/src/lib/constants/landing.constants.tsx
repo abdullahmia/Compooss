@@ -248,19 +248,16 @@ export const DESKTOP_PLATFORMS: DesktopPlatform[] = [
   {
     os: "linux",
     name: "Linux",
-    requirement: "x86_64 · Ubuntu 22.04+, Debian 12+ or similar",
-    downloads: [
-      { label: "AppImage", id: "linux-x86_64" },
-      { label: "Debian / Ubuntu (.deb)", id: "linux-amd64" },
-    ],
+    requirement: "Ubuntu 22.04+, Debian 12+ and derivatives · x86_64",
+    downloads: [{ label: "Debian / Ubuntu (.deb)", id: "linux-amd64" }],
     steps: [
       {
-        text: "AppImage: make it executable, then open it. Needs libfuse2.",
-        command: "chmod +x Compooss-{version}-linux-x86_64.AppImage",
-      },
-      {
-        text: "Debian or Ubuntu: install the .deb instead to get a menu entry.",
+        text: "Install the downloaded package with apt:",
         command: "sudo apt install ./Compooss-{version}-linux-amd64.deb",
+      },
+      { text: "Open Compooss from your applications menu." },
+      {
+        text: "On Fedora, Arch and other distributions, run Compooss with Docker instead (see Installation above).",
       },
     ],
   },
