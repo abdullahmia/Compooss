@@ -5,7 +5,6 @@ import {
   Database,
   Eye,
   FileJson,
-  GitBranch,
   Grid3X3,
   Layers,
   LayoutGrid,
@@ -116,12 +115,6 @@ export const FEATURES = [
     description:
       "Export any collection to JSON or CSV. JSON exports support three Extended JSON modes — Default, Relaxed, and Canonical — preserving BSON types like ObjectId, Long, and Decimal128. Import from JSON or CSV with drag-and-drop, live preview, and per-row error reporting.",
   },
-  {
-    icon: <GitBranch size={20} />,
-    title: "ER Diagram Generation",
-    description:
-      "Automatically visualize collection relationships as an interactive ER diagram. Detects foreign-key references from ObjectId fields and field names with configurable sample sizes. Powered by ReactFlow and Dagre for auto-layout.",
-  },
 ];
 
 export const CORE_FEATURES = [
@@ -129,7 +122,7 @@ export const CORE_FEATURES = [
   FEATURES[1],  // Collection Explorer
   FEATURES[4],  // Full Document CRUD
   FEATURES[14], // Data Export & Import
-  FEATURES[15], // ER Diagram Generation
+  FEATURES[7],  // Aggregation Pipelines
   FEATURES[9],  // Multiple Connections
 ];
 
@@ -201,14 +194,16 @@ export const USAGE_STEPS = [
 ];
 
 /**
- * Desktop installers, served from public/downloads. apps/desktop/scripts/release.ts
- * puts each build there under these names; a file that isn't there yet shows
- * as "Coming soon".
+ * Desktop installers are uploaded by hand to Cloudflare R2, one folder per
+ * version, so each file is at <DESKTOP_DOWNLOADS_BASE_URL>/<version>/<file>.
+ * apps/desktop/scripts/release.ts writes the version and file names to
+ * desktop-release.json. See docs/DESKTOP.md.
+ *
+ * The R2 bucket's public URL (https://pub-<id>.r2.dev), without a trailing
+ * slash. While it's empty, every platform shows "Coming soon".
  */
-export const DESKTOP_DOWNLOADS_PATH = "/downloads";
+export const DESKTOP_DOWNLOADS_BASE_URL: string = "https://pub-bc459496547f4e2bb619f5b2942aa8e3.r2.dev";
 export const DESKTOP_CHECKSUMS_FILE = "SHA256SUMS.txt";
-
-export const desktopDownloadUrl = (file: string) => `${DESKTOP_DOWNLOADS_PATH}/${file}`;
 
 export const DESKTOP_PLATFORMS: DesktopPlatform[] = [
   {
@@ -216,8 +211,8 @@ export const DESKTOP_PLATFORMS: DesktopPlatform[] = [
     name: "macOS",
     requirement: "macOS 13.5 or later",
     downloads: [
-      { label: "Apple Silicon", file: "Compooss-macos-arm64.dmg" },
-      { label: "Intel", file: "Compooss-macos-x64.dmg" },
+      { label: "Apple Silicon", id: "macos-arm64" },
+      { label: "Intel", id: "macos-x64" },
     ],
     steps: [
       { text: "Open the downloaded .dmg and drag Compooss into Applications." },
@@ -234,7 +229,7 @@ export const DESKTOP_PLATFORMS: DesktopPlatform[] = [
     os: "windows",
     name: "Windows",
     requirement: "Windows 10 or 11, 64-bit",
-    downloads: [{ label: "Installer (.exe)", file: "Compooss-windows-x64-setup.exe" }],
+    downloads: [{ label: "Installer (.exe)", id: "windows-x64" }],
     steps: [
       { text: "Run the downloaded installer." },
       {
@@ -246,19 +241,16 @@ export const DESKTOP_PLATFORMS: DesktopPlatform[] = [
   {
     os: "linux",
     name: "Linux",
-    requirement: "x86_64 · Ubuntu 22.04+, Debian 12+ or similar",
-    downloads: [
-      { label: "AppImage", file: "Compooss-linux-x86_64.AppImage" },
-      { label: "Debian / Ubuntu (.deb)", file: "Compooss-linux-amd64.deb" },
-    ],
+    requirement: "Ubuntu 22.04+, Debian 12+ and derivatives · x86_64",
+    downloads: [{ label: "Debian / Ubuntu (.deb)", id: "linux-amd64" }],
     steps: [
       {
-        text: "AppImage: make it executable, then open it. Needs libfuse2.",
-        command: "chmod +x Compooss-linux-x86_64.AppImage",
+        text: "Install the downloaded package with apt:",
+        command: "sudo apt install ./Compooss-{version}-linux-amd64.deb",
       },
+      { text: "Open Compooss from your applications menu." },
       {
-        text: "Debian or Ubuntu: install the .deb instead to get a menu entry.",
-        command: "sudo apt install ./Compooss-linux-amd64.deb",
+        text: "On Fedora, Arch and other distributions, run Compooss with Docker instead (see Installation above).",
       },
     ],
   },

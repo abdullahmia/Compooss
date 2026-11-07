@@ -1,12 +1,12 @@
 "use client";
 
 import { AnimatedSection } from "@/components/animated-section";
+import desktopRelease from "@/lib/constants/desktop-release.json";
 import {
   DESKTOP_CHECKSUMS_FILE,
+  DESKTOP_DOWNLOADS_BASE_URL,
   DESKTOP_PLATFORMS,
-  desktopDownloadUrl,
 } from "@/lib/constants/landing.constants";
-import type { DesktopDownloads } from "@/lib/desktop-downloads";
 import type { DesktopOs } from "@/lib/types/landing.type";
 import { motion } from "framer-motion";
 import {
@@ -42,20 +42,25 @@ const noSubscribe = () => () => {};
 
 const formatSize = (bytes: number) => `${Math.round(bytes / 1024 / 1024)} MB`;
 
-type Props = {
-  downloads: DesktopDownloads;
-};
+/** The installers on R2, written by apps/desktop/scripts/release.ts. */
+const RELEASE: {
+  version: string;
+  downloads: Record<string, { file: string; size: number } | undefined>;
+} = desktopRelease;
+const isPublished = DESKTOP_DOWNLOADS_BASE_URL !== "";
+const releaseUrl = (file: string) => `${DESKTOP_DOWNLOADS_BASE_URL}/${RELEASE.version}/${file}`;
 
-export const Download: React.FC<Props> = ({ downloads }) => {
+export const Download: React.FC = () => {
   // The visitor's OS, selected by default. Unknown during server rendering.
   const detectedOs = useSyncExternalStore(noSubscribe, detectOs, () => null);
   const [selectedOs, setSelectedOs] = useState<DesktopOs | null>(null);
   const activeOs = selectedOs ?? detectedOs ?? "macos";
 
   const platform = DESKTOP_PLATFORMS.find((p) => p.os === activeOs)!;
-  const [primary, ...alternatives] = platform.downloads.filter(
-    ({ file }) => file in downloads.sizes,
-  );
+  const [primary, ...alternatives] = platform.downloads.flatMap(({ id, label }) => {
+    const released = isPublished ? RELEASE.downloads[id] : undefined;
+    return released ? [{ label, ...released }] : [];
+  });
 
   return (
     <section id="download" className="relative py-20 md:py-28">
@@ -110,9 +115,9 @@ export const Download: React.FC<Props> = ({ downloads }) => {
                   );
                 })}
               </div>
-              {downloads.version && (
+              {isPublished && (
                 <span className="hidden rounded-md border border-zinc-700/50 bg-zinc-800/60 px-2.5 py-1 font-mono text-xs text-zinc-300 sm:inline">
-                  v{downloads.version}
+                  v{RELEASE.version}
                 </span>
               )}
             </div>
@@ -140,8 +145,7 @@ export const Download: React.FC<Props> = ({ downloads }) => {
                 {primary ? (
                   <div className="flex flex-col gap-2.5">
                     <a
-                      href={desktopDownloadUrl(primary.file)}
-                      download
+                      href={releaseUrl(primary.file)}
                       className="group flex items-center gap-3.5 rounded-xl bg-emerald-500 px-5 py-3.5 text-zinc-950 transition-all hover:bg-emerald-400 hover:shadow-lg hover:shadow-emerald-500/25"
                     >
                       <DownloadIcon size={18} className="shrink-0" />
@@ -150,15 +154,14 @@ export const Download: React.FC<Props> = ({ downloads }) => {
                           Download for {platform.name}
                         </span>
                         <span className="mt-0.5 text-xs text-zinc-950/65">
-                          {primary.label} · {formatSize(downloads.sizes[primary.file])}
+                          {primary.label} · {formatSize(primary.size)}
                         </span>
                       </span>
                     </a>
                     {alternatives.map((download) => (
                       <a
                         key={download.file}
-                        href={desktopDownloadUrl(download.file)}
-                        download
+                        href={releaseUrl(download.file)}
                         className="flex items-center justify-between gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-2.5 text-sm text-zinc-300 transition-all hover:border-zinc-700 hover:bg-zinc-800/50 hover:text-white"
                       >
                         <span className="flex items-center gap-2">
@@ -166,7 +169,7 @@ export const Download: React.FC<Props> = ({ downloads }) => {
                           {download.label}
                         </span>
                         <span className="text-xs text-zinc-500">
-                          {formatSize(downloads.sizes[download.file])}
+                          {formatSize(download.size)}
                         </span>
                       </a>
                     ))}
@@ -180,9 +183,9 @@ export const Download: React.FC<Props> = ({ downloads }) => {
 
                 <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-500">
                   <span>Free and open source · MIT</span>
-                  {downloads.hasChecksums && primary && (
+                  {primary && (
                     <a
-                      href={desktopDownloadUrl(DESKTOP_CHECKSUMS_FILE)}
+                      href={releaseUrl(DESKTOP_CHECKSUMS_FILE)}
                       className="inline-flex items-center gap-1 transition-colors hover:text-emerald-400"
                     >
                       <ShieldCheck size={13} />
@@ -206,7 +209,9 @@ export const Download: React.FC<Props> = ({ downloads }) => {
                         </span>
                         <div className="min-w-0 flex-1 pt-0.5">
                           <p className="text-sm leading-relaxed text-zinc-300">{step.text}</p>
-                          {step.command && <Command code={step.command} />}
+                          {step.command && (
+                            <Command code={step.command.replaceAll("{version}", RELEASE.version)} />
+                          )}
                         </div>
                       </li>
                     ))}

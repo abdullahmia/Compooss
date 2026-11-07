@@ -16,6 +16,7 @@
     "build-storybook": "turbo run build-storybook",
     "prepare": "husky",
     "db:seed": "bun run scripts/seed.ts",
+    "desktop": "bash apps/desktop/scripts/cli.sh",
     "desktop:dev": "bun run --cwd apps/desktop desktop:dev",
     "desktop:build": "bun run --cwd apps/desktop desktop:build",
     "desktop:release": "bun run --cwd apps/desktop desktop:release",

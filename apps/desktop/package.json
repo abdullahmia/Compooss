@@ -1,5 +1,6 @@
 {
   "name": "@compooss/desktop",
+  "version": "1.20.1",
   "private": true,
   "scripts": {
     "tauri": "tauri",

@@ -42,7 +42,7 @@ apps/desktop/
 │   ├── shared.ts             # Node version, target triples, paths
 │   ├── prepare-sidecar.ts    # builds .dist/server and downloads Node for a target
 │   ├── build.ts              # builds installers for one target
-│   └── release.ts            # builds every target into apps/docs/public/downloads
+│   └── release.ts            # bumps the version and builds every target into release/<version>/
 ├── docker/linux-builder.Dockerfile
 └── src-tauri/
     ├── tauri.conf.json         # base config (enough for `tauri dev`)
@@ -76,6 +76,18 @@ apps/desktop/
 
 ---
 
+## The `bun desktop` menu
+
+```bash
+bun desktop
+```
+
+An interactive menu for everything below: develop, make a test build, release a new version (choose patch/minor/major and the platforms), rebuild platforms, refresh the manifest, open the release folder and check which platforms this Mac can build. Releases show each platform's progress live; the full output goes to `apps/desktop/release/logs/`. After a release it can open the folder for uploading to R2 and commit the new version files.
+
+It also works without the menu: `bun desktop dev`, `bun desktop build`, `bun desktop release [--minor | --major | --no-bump] [--yes]` and `bun desktop check`.
+
+---
+
 ## Development
 
 ```bash
@@ -99,40 +111,44 @@ bun scripts/build.ts --debug
 bun desktop:build                                       # this machine
 bun desktop:build --target x86_64-apple-darwin          # Intel Mac (from Apple Silicon)
 bun desktop:build --target x86_64-pc-windows-msvc       # Windows NSIS installer, via cargo-xwin
-bun desktop:build --target x86_64-unknown-linux-gnu     # .deb + AppImage, via Docker
+bun desktop:build --target x86_64-unknown-linux-gnu     # .deb, via Docker
 bun desktop:build --skip-server                         # reuse the last server build
 ```
 
 Installers end up in `apps/desktop/src-tauri/target/<triple>/release/bundle/`, or `target-linux/release/bundle/` for Linux.
 
-The app version comes from the root `package.json`, which release-please bumps.
+The desktop app has its own version, in `apps/desktop/package.json`. `tauri.conf.json` reads it from there, and `bun desktop:release` bumps it. It's separate from the Docker/web version, which release-please manages in the root `package.json`. `desktop:build` never changes the version.
 
 ---
 
 ## Releasing
 
-The installers are served by the landing page from `apps/docs/public/downloads`. After release-please has published `vX.Y.Z`:
+Installers are built on your machine and uploaded by hand to a Cloudflare R2 bucket. The landing page links to them there.
 
 ```bash
-git checkout vX.Y.Z
-bun desktop:release
+bun desktop:release            # 1.20.0 → 1.20.1, then builds every platform
 ```
 
-Then commit the updated `apps/docs/public/downloads` and deploy the docs site.
+This bumps the version in `apps/desktop/package.json` and builds all four targets into `apps/desktop/release/<version>/`, which git ignores. The folder contains:
 
-`desktop:release` builds all four targets and copies the installers into `apps/docs/public/downloads` under stable names:
+- `Compooss-<version>-macos-arm64.dmg`
+- `Compooss-<version>-macos-x64.dmg`
+- `Compooss-<version>-windows-x64-setup.exe`
+- `Compooss-<version>-linux-amd64.deb`
+- `SHA256SUMS.txt`
 
-- `Compooss-macos-arm64.dmg`
-- `Compooss-macos-x64.dmg`
-- `Compooss-windows-x64-setup.exe`
-- `Compooss-linux-x86_64.AppImage`
-- `Compooss-linux-amd64.deb`
+The script also writes `apps/docs/src/lib/constants/desktop-release.json`: the version and each installer's file name and size. Then:
 
-It also rewrites `SHA256SUMS.txt` there, and `release.json` with the version the landing page shows. The landing page (`DESKTOP_PLATFORMS` in `apps/docs/src/lib/constants/landing.constants.tsx`) links to `/downloads/<name>`, and the README to `https://compooss.dev/downloads/<name>`. The landing page checks the folder at build time: it shows each installer's size, and shows "Coming soon" for any installer that isn't there.
+1. **Upload** the `<version>` folder to the root of the R2 bucket, so each file is at `<R2 URL>/<version>/<file>`. Keep older version folders if you want old links to keep working.
+2. **Commit** `apps/desktop/package.json` and `desktop-release.json`.
+3. **Deploy** the docs site. Its download buttons, sizes and version label come from `desktop-release.json`, and its links from `DESKTOP_DOWNLOADS_BASE_URL` (the bucket's public URL) in `apps/docs/src/lib/constants/landing.constants.tsx`.
 
-`--targets aarch64-apple-darwin,x86_64-apple-darwin` builds a subset; installers of other targets already in the folder are kept.
+Options:
 
-**File size limits.** GitHub rejects files over 100 MB, and the AppImage is about 125 MB. Track the installers with [Git LFS](https://git-lfs.com) (`git lfs track "apps/docs/public/downloads/*"`), and enable LFS in your docs host if it builds from git, for example Vercel → Project Settings → Git → Git LFS. Also check your host's limits for large static files.
+- `--minor` / `--major` bump that part instead of the patch number.
+- `--no-bump` rebuilds the current version, for example after a failed build.
+- `--targets aarch64-apple-darwin,x86_64-apple-darwin` builds a subset. Use it with `--no-bump` to redo one platform. A platform missing from the folder shows "Coming soon" on the landing page.
+- `--manifest-only` builds nothing. It rewrites `SHA256SUMS.txt` and `desktop-release.json` from what's in `release/<version>/`, for example after you add an installer built on another machine. Name it like the others.
 
 Builds are **not signed** yet:
 - macOS builds are ad-hoc signed. Users allow the app once under System Settings → Privacy & Security → Open Anyway.
@@ -147,4 +163,3 @@ To sign and notarize later, set `bundle.macOS.signingIdentity` to a Developer ID
 - **"Port 29017 is already in use"**: another program, or a stuck old server, holds the port. On macOS/Linux, `lsof -i :29017` finds it.
 - **The app shows "Open Compooss from the desktop app."**: the page was opened without the launch token, for example in a regular browser. That's the desktop lock working as intended.
 - **Blank window on Linux with Nvidia + Wayland**: start it with `WEBKIT_DISABLE_DMABUF_RENDERER=1`.
-- **AppImage won't start**: `chmod +x` it and install `libfuse2` (`libfuse2t64` on Ubuntu 24.04).

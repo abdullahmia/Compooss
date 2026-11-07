@@ -1,2 +1,0 @@
-# Git LFS stores the desktop installers (apps/docs/public/downloads).
-if command -v git-lfs >/dev/null 2>&1; then git lfs post-checkout "$@"; fi

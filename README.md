@@ -105,12 +105,7 @@ MONGO_ROOT_USERNAME=admin MONGO_ROOT_PASSWORD=secret \
 
 Prefer not to run a container? Compooss is also a desktop app for macOS, Windows and Linux. It bundles everything it needs and keeps your saved connections on your machine.
 
-| Platform | Download |
-|---|---|
-| macOS 13.5+ (Apple Silicon) | [Compooss-macos-arm64.dmg](https://compooss.dev/downloads/Compooss-macos-arm64.dmg) |
-| macOS 13.5+ (Intel) | [Compooss-macos-x64.dmg](https://compooss.dev/downloads/Compooss-macos-x64.dmg) |
-| Windows 10/11 (x64) | [Compooss-windows-x64-setup.exe](https://compooss.dev/downloads/Compooss-windows-x64-setup.exe) |
-| Linux (x86_64) | [AppImage](https://compooss.dev/downloads/Compooss-linux-x86_64.AppImage) · [.deb](https://compooss.dev/downloads/Compooss-linux-amd64.deb) |
+**[Download it from compooss.dev](https://compooss.dev/#download)** for macOS 13.5+ (Apple Silicon or Intel), Windows 10/11 (x64) or Debian/Ubuntu Linux (x86_64, .deb). On other Linux distributions, use Docker.
 
 The builds aren't signed yet: on macOS use **System Settings → Privacy & Security → Open Anyway** after the first launch is blocked, and on Windows choose **More info → Run anyway**. See [`docs/DESKTOP.md`](docs/DESKTOP.md) for details and for building it yourself.
 
@@ -153,6 +148,7 @@ Open **http://localhost:3000**, then connect to `mongodb://root:example@localhos
 | `bun build` | Build all packages and apps |
 | `bun lint` | Run ESLint across the monorepo |
 | `bun type-check` | Run TypeScript type checking |
+| `bun desktop` | Menu for developing, building and releasing the desktop app (needs Rust) |
 | `bun desktop:dev` | Run the desktop app against the dev server (needs Rust) |
 | `bun desktop:build` | Build desktop installers for this machine (see [`docs/DESKTOP.md`](docs/DESKTOP.md)) |
 

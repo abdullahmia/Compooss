@@ -23,9 +23,10 @@ docker compose -f docker/docker-compose.dev.yml up -d  # Start dev MongoDB only
 bun storybook        # Storybook for @compooss/ui (port 6006)
 
 # Desktop app (needs Rust; see docs/DESKTOP.md)
+bun desktop            # Interactive menu: develop, test build, release, rebuild, check setup
 bun desktop:dev        # Desktop window on the Next.js dev server
 bun desktop:build      # Installers for this machine (--target <triple> for others)
-bun desktop:release    # Build all targets into apps/docs/public/downloads (landing page)
+bun desktop:release    # Bump the desktop version, build all targets into apps/desktop/release/<version>/ (uploaded to R2)
 
 # Docker
 bun run docker:build   # Build Docker image locally
@@ -141,5 +142,4 @@ const { dbName, colName } = await params
 | MongoDB | `mongodb` 7.1 (Node.js driver) |
 | Browser storage | `idb` (IndexedDB wrapper) |
 | Code editor | Monaco Editor |
-| Visual pipeline | XYFlow / @xyflow/react |
 | Theming | next-themes |
