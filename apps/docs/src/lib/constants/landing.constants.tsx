@@ -1,4 +1,11 @@
-import type { ComparisonRow, DesktopPlatform } from "@/lib/types/landing.type";
+import type {
+  ComparisonRow,
+  ComparisonTool,
+  DesktopPlatform,
+  EnvVar,
+  Feature,
+  OperationGroup,
+} from "@/lib/types/landing.type";
 import {
   ArrowUpDown,
   Container,
@@ -7,130 +14,153 @@ import {
   FileJson,
   Grid3X3,
   Layers,
-  LayoutGrid,
+  ListTree,
   Plug2,
   Search,
   Shield,
+  SunMoon,
   Terminal,
+  Workflow,
   Zap,
 } from "lucide-react";
 
+export const GITHUB_URL = "https://github.com/abdullahmia/compooss";
+export const DOCKER_HUB_URL = "https://hub.docker.com/r/abdullahmia/compooss";
+
+/** In the order the sections appear on the page. */
 export const NAV_LINKS = [
-  { label: "Features", href: "#features" },
-  { label: "Why Compooss", href: "#why-compooss" },
   { label: "Installation", href: "#installation" },
   { label: "Download", href: "#download" },
+  { label: "Features", href: "#features" },
+  { label: "Why Compooss", href: "#why-compooss" },
   { label: "Usage", href: "#usage" },
-  { label: "Roadmap", href: "#roadmap" },
 ];
 
-export const FEATURES = [
+export const FEATURES: Feature[] = [
   {
-    icon: <Database size={20} />,
-    title: "Database Management",
+    icon: Database,
+    title: "Database management",
     description:
-      "List, create, and drop MongoDB databases from a visual admin panel. Get real-time stats on document counts, storage size, and indexes at a glance.",
+      "List, create and drop databases, with document counts, storage size and indexes for each one.",
   },
   {
-    icon: <Layers size={20} />,
-    title: "Collection Explorer",
+    icon: Layers,
+    title: "Collection explorer",
     description:
-      "Navigate MongoDB collections with an expandable sidebar. Instantly view document count, storage size, index count, and average document size per collection.",
+      "Browse collections from an expandable sidebar, with document count, storage size, index count and average document size.",
   },
   {
-    icon: <Search size={20} />,
-    title: "Query & Filter Documents",
+    icon: Search,
+    title: "Query and filter documents",
     description:
-      "Run MongoDB queries with native filter syntax. Sort, paginate, and explore documents without switching to the terminal or writing scripts.",
+      "Run queries in native MongoDB filter syntax, then sort and paginate the results without leaving the browser.",
   },
   {
-    icon: <Eye size={20} />,
-    title: "Multiple View Modes",
+    icon: Eye,
+    title: "List, JSON and table views",
     description:
-      "Switch between list, JSON, and table views to inspect your MongoDB data. Choose the best format for your data exploration and debugging workflow.",
+      "Switch between list, JSON and table views to read your data in the shape that suits the task.",
   },
   {
-    icon: <FileJson size={20} />,
-    title: "Full Document CRUD",
+    icon: FileJson,
+    title: "Full document CRUD",
     description:
-      "Create, read, update, and delete MongoDB documents with an intuitive Monaco-powered editor. Supports JSON validation and syntax highlighting.",
+      "Create, read, update and delete documents in a Monaco editor with JSON validation and syntax highlighting.",
   },
   {
-    icon: <Grid3X3 size={20} />,
-    title: "Index Management",
+    icon: Grid3X3,
+    title: "Index management",
     description:
-      "Create, drop, hide, and inspect indexes with full support for unique, compound, text, geospatial, TTL, partial, and hashed indexes. View usage statistics at a glance.",
+      "Create, drop, hide and inspect unique, compound, text, geospatial, TTL, partial and hashed indexes, with usage statistics.",
   },
   {
-    icon: <LayoutGrid size={20} />,
-    title: "Schema Analysis",
+    icon: ListTree,
+    title: "Schema analysis",
     description:
-      "Analyze collection schema from sampled documents: view detected fields, type distribution, frequency, value distributions, nested and array structures, and missing or inconsistent fields. Refresh on demand.",
+      "Sample a collection to see its fields, type distribution, frequency, value distributions, nested and array structures, and missing fields.",
   },
   {
-    icon: <Layers size={20} />,
-    title: "Aggregation Pipelines",
+    icon: Workflow,
+    title: "Aggregation pipelines",
     description:
-      "Build MongoDB aggregation pipelines visually with stage templates, drag-and-drop stages, per-stage previews, text mode editing, saved pipelines, and view creation from pipelines.",
+      "Build pipelines from stage templates, reorder stages by dragging, preview each stage, save pipelines and create views from them.",
   },
   {
-    icon: <Terminal size={20} />,
-    title: "MongoDB Shell",
+    icon: Terminal,
+    title: "MongoDB shell",
     description:
-      "Run ad-hoc MongoDB commands from an embedded shell panel. Execute CRUD operations, aggregation pipelines, admin commands, and JavaScript scripts with autocomplete, syntax highlighting, and session persistence.",
+      "Run CRUD, aggregation and admin commands or JavaScript from an embedded shell with autocomplete, highlighting and saved sessions.",
   },
   {
-    icon: <Plug2 size={20} />,
-    title: "Multiple Connections",
+    icon: Plug2,
+    title: "Multiple connections",
     description:
-      "Save, edit, and switch between MongoDB connection profiles from a dedicated connection page. Supports authentication (SCRAM, X.509, LDAP, Kerberos), TLS/SSL, color-coded profiles, favorites, and test-before-connect.",
+      "Save and switch connection profiles, with SCRAM, X.509, LDAP and Kerberos auth, TLS, colors, favorites and a connection test.",
   },
   {
-    icon: <Shield size={20} />,
-    title: "Built-In Safety Guards",
+    icon: Shield,
+    title: "Read-only system databases",
     description:
-      "System databases (admin, local, config) are automatically read-only. Prevent accidental destructive operations on critical MongoDB data.",
+      "admin, local and config are read-only, so a misclick can't drop critical data.",
   },
   {
-    icon: <Container size={20} />,
-    title: "Docker Native Deployment",
+    icon: Container,
+    title: "Docker deployment",
     description:
-      "Ships as a lightweight Docker image you can add to any docker-compose.yml. One service definition, no external dependencies, instant setup.",
+      "Ships as one Docker image you add to any docker-compose.yml, with no external dependencies.",
   },
   {
-    icon: <Zap size={20} />,
-    title: "Instant Startup",
+    icon: Zap,
+    title: "Standalone Next.js server",
     description:
-      "Built on Next.js with standalone output for a minimal container footprint. Starts in seconds with zero configuration required.",
+      "Built on Next.js with standalone output, so the container stays small and needs no configuration.",
   },
   {
-    icon: <LayoutGrid size={20} />,
-    title: "Modern Developer UI",
+    icon: SunMoon,
+    title: "Dark, light and system themes",
     description:
-      "Clean interface with dark, light, and system-aware themes built with Tailwind CSS and shadcn/ui. Designed to feel native to modern development workflows.",
+      "Follows your system theme or stays in the one you pick, built with Tailwind CSS and shadcn/ui.",
   },
   {
-    icon: <ArrowUpDown size={20} />,
-    title: "Data Export & Import",
+    icon: ArrowUpDown,
+    title: "Data export and import",
     description:
-      "Export any collection to JSON or CSV. JSON exports support three Extended JSON modes — Default, Relaxed, and Canonical — preserving BSON types like ObjectId, Long, and Decimal128. Import from JSON or CSV with drag-and-drop, live preview, and per-row error reporting.",
+      "Export to JSON or CSV in Default, Relaxed or Canonical Extended JSON, so ObjectId, Long and Decimal128 survive. Import JSON or CSV with a live preview and per-row errors.",
   },
 ];
 
 export const CORE_FEATURES = [
-  FEATURES[0],  // Database Management
-  FEATURES[1],  // Collection Explorer
-  FEATURES[4],  // Full Document CRUD
-  FEATURES[14], // Data Export & Import
-  FEATURES[7],  // Aggregation Pipelines
-  FEATURES[9],  // Multiple Connections
+  FEATURES[0], // Database management
+  FEATURES[1], // Collection explorer
+  FEATURES[4], // Full document CRUD
+  FEATURES[14], // Data export and import
+  FEATURES[7], // Aggregation pipelines
+  FEATURES[9], // Multiple connections
 ];
 
-export const COMPARISON_TOOLS = [
-  { name: "Compooss", highlight: true },
-  { name: "MongoDB Compass", highlight: false },
-  { name: "Mongo Express", highlight: false },
-  { name: "Studio 3T", highlight: false },
+export const WHY_REASONS = [
+  {
+    title: "Runs in your Compose stack",
+    description:
+      "One service block next to your app. No separate install and no config files.",
+  },
+  {
+    title: "Free and open source",
+    description:
+      "MIT licensed, with no paywall, no usage limits and no account to create.",
+  },
+  {
+    title: "Nothing to set up",
+    description:
+      "No wizards, license keys or cloud sync. Start the container and connect.",
+  },
+];
+
+export const COMPARISON_TOOLS: ComparisonTool[] = [
+  { key: "compooss", name: "Compooss", shortName: "Compooss", description: "Web and desktop · Free", highlight: true },
+  { key: "compass", name: "MongoDB Compass", shortName: "Compass", description: "Desktop app · Install required", highlight: false },
+  { key: "mongoExpress", name: "Mongo Express", shortName: "Mongo Express", description: "Web UI · Minimal features", highlight: false },
+  { key: "studio3t", name: "Studio 3T", shortName: "Studio 3T", description: "Professional IDE · Paid", highlight: false },
 ];
 
 export const COMPARISON_ROWS: ComparisonRow[] = [
@@ -138,14 +168,14 @@ export const COMPARISON_ROWS: ComparisonRow[] = [
   { feature: "Zero configuration", compooss: "yes", compass: "no", mongoExpress: "partial", studio3t: "no" },
   { feature: "Web-based (no install)", compooss: "yes", compass: "no", mongoExpress: "yes", studio3t: "no" },
   { feature: "Desktop app (macOS, Windows, Linux)", compooss: "yes", compass: "yes", mongoExpress: "no", studio3t: "yes" },
-  { feature: "Dark, light & system themes", compooss: "yes", compass: "partial", mongoExpress: "no", studio3t: "partial" },
+  { feature: "Dark, light and system themes", compooss: "yes", compass: "partial", mongoExpress: "no", studio3t: "partial" },
   { feature: "Document CRUD", compooss: "yes", compass: "yes", mongoExpress: "yes", studio3t: "yes" },
   { feature: "Index management", compooss: "yes", compass: "yes", mongoExpress: "no", studio3t: "yes" },
   { feature: "Schema analysis", compooss: "yes", compass: "yes", mongoExpress: "no", studio3t: "yes" },
   { feature: "Aggregation pipeline builder", compooss: "yes", compass: "yes", mongoExpress: "no", studio3t: "yes" },
   { feature: "Built-in MongoDB shell", compooss: "yes", compass: "yes", mongoExpress: "no", studio3t: "partial" },
   { feature: "Query with MongoDB syntax", compooss: "yes", compass: "yes", mongoExpress: "partial", studio3t: "yes" },
-  { feature: "Free & open-source", compooss: "yes", compass: "partial", mongoExpress: "yes", studio3t: "no" },
+  { feature: "Free and open source", compooss: "yes", compass: "partial", mongoExpress: "yes", studio3t: "no" },
   { feature: "No signup or cloud required", compooss: "yes", compass: "yes", mongoExpress: "yes", studio3t: "no" },
   { feature: "Multiple connection profiles", compooss: "yes", compass: "yes", mongoExpress: "no", studio3t: "yes" },
   { feature: "Data export (JSON / CSV)", compooss: "yes", compass: "yes", mongoExpress: "no", studio3t: "yes" },
@@ -172,24 +202,113 @@ export const DOCKER_RUN_CODE = `# Run Compooss and connect via the /connect page
 docker run -p 6969:3000 \\
   abdullahmia/compooss:latest`;
 
+export const ENV_VARS: EnvVar[] = [
+  {
+    names: ["PORT"],
+    description: "The port the server listens on inside the container. Default 3000",
+  },
+  {
+    names: ["COMPOOSS_USERNAME", "COMPOOSS_PASSWORD"],
+    description:
+      "Optional. Set both to require a login for every page and API call",
+  },
+];
+
 export const USAGE_STEPS = [
   {
     step: "01",
-    title: "Add to your Docker Compose file",
+    title: "Add the service",
     description:
-      "Drop the Compooss service into your existing docker-compose.yml alongside your MongoDB container. One service definition is all you need.",
+      "Put the Compooss service in your compose file, next to your MongoDB container.",
   },
   {
     step: "02",
-    title: "Connect from the UI",
+    title: "Open localhost:6969",
     description:
-      "Open the /connect page in Compooss, enter your MongoDB connection string, and save a connection profile. You can test the connection before using it.",
+      "Run docker compose up and open Compooss in your browser. Nothing else to install.",
   },
   {
     step: "03",
-    title: "Open and start exploring",
+    title: "Connect and explore",
     description:
-      "Navigate to localhost:6969 in your browser. Instantly browse databases, run queries, edit documents, and manage your MongoDB data through a visual interface.",
+      "On the /connect page, enter your connection string, test it and save it as a profile. Then browse, query and edit.",
+  },
+];
+
+export const USAGE_OPERATIONS: OperationGroup[] = [
+  {
+    title: "Browse and query",
+    items: [
+      "Browse all databases and collections",
+      "Create and drop databases",
+      "Create and drop collections",
+      "View collection stats",
+      "Query with MongoDB filter syntax",
+      "Sort and paginate results",
+      "View as list, JSON or table",
+    ],
+  },
+  {
+    title: "Documents",
+    items: ["Add new documents", "Edit documents inline", "Delete documents safely"],
+  },
+  {
+    title: "Indexes",
+    items: [
+      "Create and drop indexes",
+      "Hide and unhide indexes",
+      "View index usage statistics",
+    ],
+  },
+  {
+    title: "Schema",
+    items: [
+      "Analyze collection schema from samples",
+      "View field types, frequency and value distributions",
+      "Inspect nested fields and array structures",
+    ],
+  },
+  {
+    title: "Aggregation",
+    items: [
+      "Build pipelines with stage templates",
+      "Reorder, enable and disable stages",
+      "Preview results for individual stages",
+      "Save and reload pipelines per collection",
+      "Export pipeline JSON and backend-ready code",
+      "Create views from pipelines",
+    ],
+  },
+  {
+    title: "Shell",
+    items: [
+      "Run ad-hoc shell commands in the browser",
+      "Execute JavaScript queries with autocomplete",
+      "Navigate command history and persist sessions",
+      "Run CRUD, aggregation and admin commands",
+      "Access bulk operations and system collections",
+      "Switch databases with use and check server status",
+    ],
+  },
+  {
+    title: "Connections",
+    items: [
+      "Save and manage multiple connection profiles",
+      "Test connections before saving",
+      "Color-code and label connections",
+      "Switch deployments from the top bar",
+      "Masked connection strings",
+      "Read-only system databases",
+    ],
+  },
+  {
+    title: "Import and export",
+    items: [
+      "Export collections to JSON or CSV with a filter and limit",
+      "Choose Default, Relaxed or Canonical Extended JSON",
+      "Keep BSON types like ObjectId, Long, Decimal128 and Date in exports",
+      "Import documents from JSON arrays or CSV files",
+    ],
   },
 ];
 

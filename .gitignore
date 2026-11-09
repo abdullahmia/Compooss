@@ -64,4 +64,5 @@ Thumbs.db
 
 # Claude
 .claude/*
+!.claude/skills/
 CLAUDE.md

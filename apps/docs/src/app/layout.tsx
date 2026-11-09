@@ -1,13 +1,26 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 // release-please bumps the version here on every release.
 import rootPackage from "../../../../package.json";
 import "./globals.css";
 
+const plexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-plex-sans",
+});
+
+const plexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500"],
+  variable: "--font-plex-mono",
+});
+
 const SITE_URL = "https://compooss.dev";
 const SITE_NAME = "Compooss";
-const TITLE = "Compooss — Open-Source MongoDB GUI for Docker Compose";
+const TITLE = "Compooss | Open-Source MongoDB GUI for Docker Compose";
 const DESCRIPTION =
-  "Compooss is a free, open-source MongoDB GUI built for Docker Compose workflows. Browse databases, query documents, manage collections, and explore schemas — all from a single lightweight Docker container. No signup required.";
+  "Compooss is a free, open-source MongoDB GUI built for Docker Compose workflows. Browse databases, query documents, manage collections, and explore schemas, all from a single lightweight Docker container. No signup required.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -52,7 +65,7 @@ export const metadata: Metadata = {
         url: "/preview.jpeg",
         width: 1920,
         height: 1080,
-        alt: "Compooss — MongoDB GUI showing database browser, collection explorer, and document viewer",
+        alt: "Compooss MongoDB GUI showing the database browser, collection explorer, and document viewer",
       },
     ],
   },
@@ -76,6 +89,11 @@ export const metadata: Metadata = {
   alternates: {
     canonical: SITE_URL,
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#111314",
+  colorScheme: "dark",
 };
 
 const jsonLd = {
@@ -112,18 +130,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={`dark ${plexSans.variable} ${plexMono.variable}`}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
