@@ -1,5 +1,5 @@
 /** Settings and helpers shared by the desktop build scripts. */
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 
@@ -62,16 +62,11 @@ const PACKAGE_JSON = path.join(DESKTOP_DIR, "package.json");
 
 /**
  * The desktop app's version, from apps/desktop/package.json (tauri.conf.json
- * reads it too). scripts/release.ts bumps it; it's separate from the
- * Docker/web version that release-please manages.
+ * reads it too). It's the same as the web app's and the Docker image's:
+ * release-please bumps it along with the root package.json.
  */
 export function appVersion(): string {
   return JSON.parse(readFileSync(PACKAGE_JSON, "utf8")).version;
-}
-
-export function setAppVersion(version: string) {
-  const pkg = readFileSync(PACKAGE_JSON, "utf8");
-  writeFileSync(PACKAGE_JSON, pkg.replace(/"version": "[^"]+"/, `"version": "${version}"`));
 }
 
 /** Value of `--name <value>` in argv, if given. */

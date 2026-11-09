@@ -105,7 +105,7 @@ MONGO_ROOT_USERNAME=admin MONGO_ROOT_PASSWORD=secret \
 
 Prefer not to run a container? Compooss is also a desktop app for macOS, Windows and Linux. It bundles everything it needs and keeps your saved connections on your machine.
 
-**[Download it from compooss.dev](https://compooss.dev/#download)** for macOS 13.5+ (Apple Silicon or Intel), Windows 10/11 (x64) or Debian/Ubuntu Linux (x86_64, .deb). On other Linux distributions, use Docker.
+**[Download it from compooss.dev](https://compooss.dev/#download)** or from [GitHub Releases](https://github.com/abdullahmia/compooss/releases) for macOS 13.5+ (Apple Silicon or Intel), Windows 10/11 (x64) or Debian/Ubuntu Linux (x86_64, .deb). On other Linux distributions, use Docker.
 
 The builds aren't signed yet: on macOS use **System Settings → Privacy & Security → Open Anyway** after the first launch is blocked, and on Windows choose **More info → Run anyway**. See [`docs/DESKTOP.md`](docs/DESKTOP.md) for details and for building it yourself.
 

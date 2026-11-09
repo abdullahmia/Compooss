@@ -42,7 +42,7 @@ apps/desktop/
 │   ├── shared.ts             # Node version, target triples, paths
 │   ├── prepare-sidecar.ts    # builds .dist/server and downloads Node for a target
 │   ├── build.ts              # builds installers for one target
-│   └── release.ts            # bumps the version and builds every target into release/<version>/
+│   └── release.ts            # builds every target into release/<version>/ and publishes it
 ├── docker/linux-builder.Dockerfile
 └── src-tauri/
     ├── tauri.conf.json         # base config (enough for `tauri dev`)
@@ -82,9 +82,9 @@ apps/desktop/
 bun desktop
 ```
 
-An interactive menu for everything below: develop, make a test build, release a new version (choose patch/minor/major and the platforms), rebuild platforms, refresh the manifest, open the release folder and check which platforms this Mac can build. Releases show each platform's progress live; the full output goes to `apps/desktop/release/logs/`. After a release it can open the folder for uploading to R2 and commit the new version files.
+An interactive menu for everything below: develop, make a test build, build a release's installers (choose the platforms), refresh the manifest, publish to GitHub, open the release folder and check which platforms this Mac can build. Builds show each platform's progress live; the full output goes to `apps/desktop/release/logs/`. After a build it can publish the installers and commit the landing page manifest.
 
-It also works without the menu: `bun desktop dev`, `bun desktop build`, `bun desktop release [--minor | --major | --no-bump] [--yes]` and `bun desktop check`.
+It also works without the menu: `bun desktop dev`, `bun desktop build`, `bun desktop release [--yes]`, `bun desktop publish` and `bun desktop check`.
 
 ---
 
@@ -117,38 +117,34 @@ bun desktop:build --skip-server                         # reuse the last server 
 
 Installers end up in `apps/desktop/src-tauri/target/<triple>/release/bundle/`, or `target-linux/release/bundle/` for Linux.
 
-The desktop app has its own version, in `apps/desktop/package.json`. `tauri.conf.json` reads it from there, and `bun desktop:release` bumps it. It's separate from the Docker/web version, which release-please manages in the root `package.json`. `desktop:build` never changes the version.
+The desktop app has the same version as the web app and the Docker image. release-please bumps it in `apps/desktop/package.json` along with the root `package.json` (`extra-files` in `release-please-config.json`), and `tauri.conf.json` reads it from there. The build scripts never change it.
 
 ---
 
 ## Releasing
 
-Installers are built on your machine and uploaded by hand to a Cloudflare R2 bucket. The landing page links to them there.
+The desktop app is released together with the web app and the Docker image, under the same version. Merging release-please's release PR creates the GitHub release `v<version>` and publishes the Docker image. The desktop installers are then built on your Mac and attached to that same release, and the landing page links to them there.
 
-```bash
-bun desktop:release            # 1.20.0 → 1.20.1, then builds every platform
-```
+1. **Merge** release-please's release PR, then update your checkout: `git checkout main && git pull`. The installers are built from your working tree, so it should be the release's commit. If something else was merged since, `git checkout v<version>`. The `bun desktop` menu warns when you're not on it.
+2. **Build** with `bun desktop:release` (or **Release** in the `bun desktop` menu). This builds all four targets into `apps/desktop/release/<version>/`, which git ignores:
+   - `Compooss-<version>-macos-arm64.dmg`
+   - `Compooss-<version>-macos-x64.dmg`
+   - `Compooss-<version>-windows-x64-setup.exe`
+   - `Compooss-<version>-linux-amd64.deb`
+   - `SHA256SUMS.txt`
 
-This bumps the version in `apps/desktop/package.json` and builds all four targets into `apps/desktop/release/<version>/`, which git ignores. The folder contains:
+   It also writes `apps/docs/src/lib/constants/desktop-release.json`: the version, the release tag and each installer's file name and size.
+3. **Publish** with `bun desktop publish` (or **Publish** in the menu). This needs the [GitHub CLI](https://cli.github.com), logged in with `gh auth login`. It uploads the installers and `SHA256SUMS.txt` to the release `v<version>` and adds a "Desktop app" section with download instructions to its notes, below release-please's changelog. Publishing again replaces the files and that section, for example after rebuilding one platform.
+4. **Commit** `desktop-release.json` and get it into `main` like any other change.
+5. **Deploy** the docs site. Its download buttons, sizes and version label come from `desktop-release.json`, and its links from `DESKTOP_RELEASES_URL` in `apps/docs/src/lib/constants/landing.constants.tsx`.
 
-- `Compooss-<version>-macos-arm64.dmg`
-- `Compooss-<version>-macos-x64.dmg`
-- `Compooss-<version>-windows-x64-setup.exe`
-- `Compooss-<version>-linux-amd64.deb`
-- `SHA256SUMS.txt`
+Older releases keep their installers, so old download links keep working. 1.20.1 was released before the versions were shared, so its installers are on the release `desktop-v1.20.1`.
 
-The script also writes `apps/docs/src/lib/constants/desktop-release.json`: the version and each installer's file name and size. Then:
+Options for `bun desktop:release`:
 
-1. **Upload** the `<version>` folder to the root of the R2 bucket, so each file is at `<R2 URL>/<version>/<file>`. Keep older version folders if you want old links to keep working.
-2. **Commit** `apps/desktop/package.json` and `desktop-release.json`.
-3. **Deploy** the docs site. Its download buttons, sizes and version label come from `desktop-release.json`, and its links from `DESKTOP_DOWNLOADS_BASE_URL` (the bucket's public URL) in `apps/docs/src/lib/constants/landing.constants.tsx`.
-
-Options:
-
-- `--minor` / `--major` bump that part instead of the patch number.
-- `--no-bump` rebuilds the current version, for example after a failed build.
-- `--targets aarch64-apple-darwin,x86_64-apple-darwin` builds a subset. Use it with `--no-bump` to redo one platform. A platform missing from the folder shows "Coming soon" on the landing page.
+- `--targets aarch64-apple-darwin,x86_64-apple-darwin` builds a subset, for example to redo one platform after a failed build. A platform missing from the folder shows "Coming soon" on the landing page.
 - `--manifest-only` builds nothing. It rewrites `SHA256SUMS.txt` and `desktop-release.json` from what's in `release/<version>/`, for example after you add an installer built on another machine. Name it like the others.
+- `--publish` builds nothing. It uploads `release/<version>/` to GitHub, which is what `bun desktop publish` runs.
 
 Builds are **not signed** yet:
 - macOS builds are ad-hoc signed. Users allow the app once under System Settings → Privacy & Security → Open Anyway.
