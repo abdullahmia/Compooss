@@ -4,7 +4,6 @@ import { Footer } from "./footer.component";
 import { Hero } from "./hero.component";
 import { Installation } from "./installation.component";
 import { Nav } from "./nav.component";
-import { Roadmap } from "./roadmap.component";
 import { Usage } from "./usage.component";
 import { Why } from "./why.component";
 
@@ -19,7 +18,6 @@ export const LandingPage: React.FC = () => {
         <Features />
         <Why />
         <Usage />
-        <Roadmap />
       </main>
       <Footer />
     </div>

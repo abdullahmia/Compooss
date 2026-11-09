@@ -34,7 +34,6 @@ export const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "Why Compooss", href: "#why-compooss" },
   { label: "Usage", href: "#usage" },
-  { label: "Roadmap", href: "#roadmap" },
 ];
 
 export const FEATURES: Feature[] = [
