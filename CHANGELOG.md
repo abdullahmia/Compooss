@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.24.0](https://github.com/abdullahmia/Compooss/compare/v1.23.0...v1.24.0) (2026-11-09)
+
+
+### Features
+
+* **desktop:** publish desktop installers as GitHub releases ([66bfed6](https://github.com/abdullahmia/Compooss/commit/66bfed6b4e73341cd5bab49d1fc981b5310c4a53))
+* **desktop:** share one version between the web and desktop apps ([42af0ec](https://github.com/abdullahmia/Compooss/commit/42af0ecfec6a125774a61ce1077ea907a2438653))
+
 ## [1.23.0](https://github.com/abdullahmia/Compooss/compare/v1.22.0...v1.23.0) (2026-11-07)
 
 
