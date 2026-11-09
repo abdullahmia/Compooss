@@ -104,7 +104,7 @@ function FieldValue({ value }: { value: Value }) {
 function DocumentCard({ fields }: { fields: Field[] }) {
   const id = fields[0][1];
   return (
-    <div className="overflow-hidden rounded-lg border border-line bg-card">
+    <div className="shrink-0 overflow-hidden rounded-lg border border-line bg-card">
       <div className="relative flex h-9 items-center gap-2 border-b border-line px-4">
         <span className="absolute inset-y-0 left-0 w-0.5 bg-accent" />
         <ChevronDown size={14} strokeWidth={1.5} className="text-fg-muted" />
@@ -194,7 +194,7 @@ function Sidebar() {
 
 export function AppPreview() {
   return (
-    <div className="overflow-hidden rounded-2xl border border-line-strong bg-page">
+    <div className="overflow-hidden rounded-2xl border border-line-strong bg-page shadow-[0_32px_64px_-24px_rgba(0,0,0,0.6)]">
       {/* Browser frame */}
       <div className="relative flex h-10 items-center border-b border-line bg-deep px-4">
         <div className="flex gap-2">
@@ -222,7 +222,7 @@ export function AppPreview() {
         </span>
       </div>
 
-      <div className="flex h-[440px] md:h-[560px]">
+      <div className="flex h-[440px] md:h-[560px] lg:h-[520px]">
         <Sidebar />
 
         <div className="flex min-w-0 flex-1 flex-col">
