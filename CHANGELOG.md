@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.25.0](https://github.com/abdullahmia/Compooss/compare/v1.24.0...v1.25.0) (2026-11-09)
+
+
+### Features
+
+* **docs:** draw the Compooss leaf in JSON characters in the hero ([78f3dd2](https://github.com/abdullahmia/Compooss/commit/78f3dd2dfac9c327a4404b0ba39a8ab844bd0507))
+* **docs:** redesign the landing page ([a447dda](https://github.com/abdullahmia/Compooss/commit/a447dda6b0ce0eb95ff887909e5f14ecb5db8620))
+
 ## [1.24.0](https://github.com/abdullahmia/Compooss/compare/v1.23.0...v1.24.0) (2026-11-09)
 
 
