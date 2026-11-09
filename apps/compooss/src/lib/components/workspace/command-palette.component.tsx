@@ -7,6 +7,7 @@ import {
   useCloseWorkspaceTab,
   useWorkspaceTabs,
 } from "@/lib/hooks/use-workspace-tabs.hook";
+import { DESKTOP_ACTION_EVENT, isDesktop } from "@/lib/platform/platform";
 import { useConnection } from "@/lib/providers/connection-provider";
 import { useShellPanel } from "@/lib/providers/shell-provider";
 import { COLLECTION_QUERY_KEYS } from "@/lib/services/collections/collection-query.key";
@@ -24,6 +25,7 @@ import { Command } from "cmdk";
 import {
   Activity,
   Database,
+  Download,
   FolderPlus,
   LayoutGrid,
   Moon,
@@ -282,6 +284,23 @@ export const CommandPalette: React.FC<Props> = ({ open, onOpenChange }) => {
                   <Command.Item value="Switch connection" keywords={["connect", "server"]} onSelect={() => run(() => router.push("/connect"))} className={ITEM_CLASS}>
                     <Plug className="h-3.5 w-3.5 text-muted-foreground" /> Switch connection
                   </Command.Item>
+                  {/* Also in the macOS app menu; handled by update-notification.component.tsx. */}
+                  {isDesktop() && (
+                    <Command.Item
+                      value="Check for updates"
+                      keywords={["update", "upgrade", "version"]}
+                      onSelect={() =>
+                        run(() =>
+                          window.dispatchEvent(
+                            new CustomEvent(DESKTOP_ACTION_EVENT, { detail: "check-for-updates" }),
+                          ),
+                        )
+                      }
+                      className={ITEM_CLASS}
+                    >
+                      <Download className="h-3.5 w-3.5 text-muted-foreground" /> Check for updates
+                    </Command.Item>
+                  )}
                 </Command.Group>
               </Command.List>
 

@@ -107,6 +107,8 @@ Prefer not to run a container? Compooss is also a desktop app for macOS, Windows
 
 **[Download it from compooss.dev](https://compooss.dev/#download)** or from [GitHub Releases](https://github.com/abdullahmia/compooss/releases) for macOS 13.5+ (Apple Silicon or Intel), Windows 10/11 (x64) or Debian/Ubuntu Linux (x86_64, .deb). On other Linux distributions, use Docker.
 
+It updates itself: when a new version is out, a notification offers to download it, shows the progress, and restarts the app into the new version. You can also check any time with **Check for Updates…** in the macOS app menu or in the command palette.
+
 The builds aren't signed yet: on macOS use **System Settings → Privacy & Security → Open Anyway** after the first launch is blocked, and on Windows choose **More info → Run anyway**. See [`docs/DESKTOP.md`](docs/DESKTOP.md) for details and for building it yourself.
 
 ---

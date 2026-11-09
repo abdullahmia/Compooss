@@ -1,5 +1,5 @@
 /** Settings and helpers shared by the desktop build scripts. */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import path from "node:path";
 
@@ -17,6 +17,31 @@ export const SERVER_DIST_DIR = path.join(DESKTOP_DIR, ".dist", "server");
 export const BINARIES_DIR = path.join(TAURI_DIR, "binaries");
 export const CACHE_DIR =
   process.env.COMPOOSS_DESKTOP_CACHE ?? path.join(homedir(), ".cache", "compooss-desktop");
+
+/**
+ * Private key that signs the update packages. Installed apps only accept
+ * updates signed with it (its public key is plugins.updater.pubkey in
+ * src-tauri/tauri.conf.json), so losing it means users have to reinstall.
+ * TAURI_SIGNING_PRIVATE_KEY (the key or a path to it) takes precedence.
+ */
+export const UPDATER_KEY_FILE = path.join(homedir(), ".tauri", "compooss.key");
+
+/**
+ * Environment that makes `tauri build` sign the update packages, or null when
+ * there's no key. It holds the key itself rather than its path, so it also
+ * works in the Linux build container.
+ */
+export function updaterSigningEnv(): Record<string, string> | null {
+  let key = process.env.TAURI_SIGNING_PRIVATE_KEY;
+  if (!key && existsSync(UPDATER_KEY_FILE)) key = UPDATER_KEY_FILE;
+  if (!key) return null;
+  if (existsSync(key)) key = readFileSync(key, "utf8").trim();
+  return {
+    TAURI_SIGNING_PRIVATE_KEY: key,
+    // Without one, the CLI would prompt for it.
+    TAURI_SIGNING_PRIVATE_KEY_PASSWORD: process.env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD ?? "",
+  };
+}
 
 type Target = {
   /** Name of the official Node.js build, e.g. "darwin-arm64". */

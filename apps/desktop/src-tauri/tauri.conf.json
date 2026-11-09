@@ -46,5 +46,12 @@
     "linux": {
       "deb": { "section": "database" }
     }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDRBOUI4QjYwMzI4MTc1NUIKUldSYmRZRXlZSXViU29XdzJEYXJhcHhva2tVWnRSRjFOVWpQanpFYVZUUWdDNWpXeS9iQ3UrOTUK",
+      "endpoints": ["https://github.com/abdullahmia/compooss/releases/latest/download/latest.json"],
+      "requireSignedVersion": true
+    }
   }
 }

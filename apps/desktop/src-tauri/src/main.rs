@@ -5,6 +5,7 @@ mod commands;
 #[cfg(target_os = "macos")]
 mod menu;
 mod sidecar;
+mod updater;
 
 use tauri::{
     ipc::CapabilityBuilder, AppHandle, Manager, RunEvent, Url, WebviewUrl, WebviewWindow,
@@ -39,18 +40,26 @@ fn main() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
-        .invoke_handler(tauri::generate_handler![commands::save_file])
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .manage(updater::PendingUpdate::default())
+        .invoke_handler(tauri::generate_handler![
+            commands::save_file,
+            updater::check_for_update,
+            updater::install_update
+        ])
         .setup(|app| {
             let window = build_main_window(app.handle())?;
             #[cfg(target_os = "macos")]
             menu::install(app.handle())?;
 
             // The page comes from the local server, so IPC has to be opened to
-            // that origin explicitly, and only for saving files.
+            // that origin explicitly, and only for saving files and updates.
             let mut capability = CapabilityBuilder::new("server-page")
                 .remote(format!("http://127.0.0.1:{}/*", sidecar::PORT))
                 .window("main")
-                .permission("allow-save-file");
+                .permission("allow-save-file")
+                .permission("allow-check-for-update")
+                .permission("allow-install-update");
             if tauri::is_dev() {
                 capability =
                     capability.remote(format!("http://{}:{}/*", DEV_SERVER.0, DEV_SERVER.1));
