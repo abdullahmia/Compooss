@@ -7,6 +7,7 @@
 #   bun desktop build              package the app for this Mac (version unchanged)
 #   bun desktop release [--minor | --major | --no-bump] [--yes]
 #                                  bump the version and build every platform this Mac can
+#   bun desktop publish            upload the built version to its GitHub release
 #   bun desktop check              show which platforms this Mac can build
 #
 # It drives build.ts and release.ts next to it; see docs/DESKTOP.md.
@@ -19,7 +20,6 @@ REPO_ROOT="$(cd "$DESKTOP_DIR/../.." && pwd)"
 RELEASE_DIR="$DESKTOP_DIR/release"
 LOG_DIR="$RELEASE_DIR/logs"
 VERSION_FILES=(apps/desktop/package.json apps/docs/src/lib/constants/desktop-release.json)
-LANDING_CONSTANTS="$REPO_ROOT/apps/docs/src/lib/constants/landing.constants.tsx"
 # rustup installs here, and it may not be on PATH yet.
 export PATH="$HOME/.cargo/bin:$PATH"
 
@@ -88,6 +88,9 @@ current_version() {
   sed -nE 's/^[[:space:]]*"version": "([^"]+)".*/\1/p' "$DESKTOP_DIR/package.json" | head -1
 }
 
+# Same as releaseTag() in release.ts.
+release_tag() { echo "desktop-v$1"; }
+
 # next_version 1.2.3 patch|minor|major|none
 next_version() {
   local IFS=.
@@ -145,9 +148,6 @@ header() {
     printf ' · %s%s uncommitted %s%s' "$YELLOW" "$changes" "$([[ $changes == 1 ]] && echo change || echo changes)" "$GRAY"
   else
     printf ' · clean'
-  fi
-  if grep -q 'DESKTOP_DOWNLOADS_BASE_URL: string = ""' "$LANDING_CONSTANTS" 2>/dev/null; then
-    printf ' · %sR2 URL not set on the landing page' "$YELLOW"
   fi
   printf '%s\n\n' "$RESET"
 }
@@ -304,8 +304,9 @@ new_log() {
   echo "$LOG_DIR/$(date +%Y%m%d-%H%M%S)-$1.log"
 }
 
+# show_failure LOG [WHAT FAILED]
 show_failure() {
-  printf '\n  %sThe build failed. Last lines of the log:%s\n\n' "$RED" "$RESET"
+  printf '\n  %s%s Last lines of the log:%s\n\n' "$RED" "${2:-The build failed.}" "$RESET"
   tr '\r' '\n' <"$1" | sed "s/$ESC\[[0-9;]*[A-Za-z]//g" | grep -v '^[[:space:]]*$' | tail -n 20 | sed 's/^/    /'
   printf '\n  Full log: %s\n' "$(relative "$1")"
 }
@@ -319,8 +320,8 @@ show_release() {
     printf '    %-44s %s%7s%s\n' "$(basename "$file")" "$GRAY" "$(human_size "$(wc -c <"$file" | tr -d ' ')")" "$RESET"
   done
   printf '\n  %sNext%s\n' "$BOLD" "$RESET"
-  printf '    1. Upload the %s%s%s folder to the root of your R2 bucket\n' "$BOLD" "$1" "$RESET"
-  printf '    2. Commit the new version (%s and %s)\n' "${VERSION_FILES[0]}" "$(basename "${VERSION_FILES[1]}")"
+  printf '    1. Commit the new version (%s and %s) and push it\n' "${VERSION_FILES[0]}" "$(basename "${VERSION_FILES[1]}")"
+  printf '    2. Publish it as the GitHub release %s%s%s\n' "$BOLD" "$(release_tag "$1")" "$RESET"
   printf '    3. Deploy the docs site\n\n'
 }
 
@@ -424,7 +425,7 @@ commit_version() {
   log=$(new_log commit)
   printf '\n'
   if run_step "Committing $1" "$log" git -C "$REPO_ROOT" commit -m "chore(desktop): release $1" -- "${VERSION_FILES[@]}"; then
-    MESSAGE="Committed \"chore(desktop): release $1\". Push it when you're ready."
+    MESSAGE="Committed \"chore(desktop): release $1\". Push it, then publish."
   else
     show_failure "$log"
     pause
@@ -441,17 +442,44 @@ release_actions() {
     [[ -n $MESSAGE ]] && printf '  %s%s%s\n\n' "$ACCENT" "$MESSAGE" "$RESET"
     MESSAGE=""
     choose "What now?" \
-      "Open folder|Show it in Finder, ready to drag into R2" \
-      "Copy path|Copy the folder path to the clipboard" \
       "Commit|Commit the new version files" \
+      "Publish|Upload to the GitHub release $(release_tag "$version")" \
+      "Open folder|Show it in Finder" \
+      "Copy path|Copy the folder path to the clipboard" \
       "Done|Back to the menu"
     case $CHOICE in
-      0) open "$dir" ;;
-      1) printf '%s' "$dir" | pbcopy && MESSAGE="Copied $dir" ;;
-      2) commit_version "$version" ;;
+      0) commit_version "$version" ;;
+      1) publish_version "$version" ;;
+      2) open "$dir" ;;
+      3) printf '%s' "$dir" | pbcopy && MESSAGE="Copied $dir" ;;
       *) return ;;
     esac
   done
+}
+
+# Uploads release/VERSION to its GitHub release. Sets MESSAGE when it worked.
+publish_version() {
+  local log url
+  log=$(new_log "publish-$1")
+  printf '\n'
+  if run_step "Publishing $1" "$log" bun "$DESKTOP_DIR/scripts/release.ts" --publish; then
+    url=$(grep -oE 'https://github\.com/[^[:space:]]+/releases/tag/[^[:space:]]+' "$log" | tail -1)
+    MESSAGE="Published ${url:-$(release_tag "$1")}. Deploy the docs site next."
+  else
+    show_failure "$log" "Publishing failed."
+    pause
+    return 1
+  fi
+}
+
+cmd_publish() {
+  local version
+  version=$(current_version)
+  header
+  printf '  %sPublish%s  %srelease/%s → GitHub release %s%s\n' "$BOLD" "$RESET" "$GRAY" "$version" "$(release_tag "$version")" "$RESET"
+  MESSAGE=""
+  publish_version "$version" || return 1
+  printf '\n  %s%s%s\n\n' "$ACCENT" "$MESSAGE" "$RESET"
 }
 
 cmd_release() {
@@ -507,6 +535,8 @@ cmd_check() {
   check_tool "Xcode tools" "$(xcode-select -p >/dev/null 2>&1 && echo installed)"
   check_tool "Docker" "$(docker info >/dev/null 2>&1 && echo running)"
   check_tool "cargo-xwin" "$(cargo-xwin --version 2>/dev/null | awk '{print $2}')"
+  check_tool "GitHub CLI" "$(gh auth status >/dev/null 2>&1 && echo "logged in")" \
+    "$(has gh && echo "not logged in (gh auth login)" || echo "not found (brew install gh)")"
   printf '\n  %sPlatforms this Mac can build%s\n' "$BOLD" "$RESET"
   for ((i = 0; i < ${#TRIPLES[@]}; i++)); do
     blocker=$(platform_blocker "$i")
@@ -518,11 +548,12 @@ cmd_check() {
   done
 }
 
+# check_tool NAME VERSION [WHY IT'S MISSING]
 check_tool() {
   if [[ -n $2 ]]; then
     printf '    %s✓%s %-12s %s%s%s\n' "$ACCENT" "$RESET" "$1" "$GRAY" "$2" "$RESET"
   else
-    printf '    %s○%s %-12s %snot found%s\n' "$YELLOW" "$RESET" "$1" "$GRAY" "$RESET"
+    printf '    %s○%s %-12s %s%s%s\n' "$YELLOW" "$RESET" "$1" "$GRAY" "${3:-not found}" "$RESET"
   fi
 }
 
@@ -537,6 +568,7 @@ main_menu() {
       "Release|New version: bump $v and build the installers" \
       "Rebuild|Rebuild platforms for $v, e.g. after a failed build" \
       "Refresh|Rescan release/$v for the checksums and landing page" \
+      "Publish|Upload release/$v to its GitHub release" \
       "Open folder|Show release/$v in Finder" \
       "Check setup|See which platforms this Mac can build" \
       "Quit|"
@@ -546,8 +578,9 @@ main_menu() {
       2) cmd_release ;;
       3) release_flow none ;;
       4) cmd_refresh ;;
-      5) cmd_open ;;
-      6) header; cmd_check; pause ;;
+      5) cmd_publish; pause ;;
+      6) cmd_open ;;
+      7) header; cmd_check; pause ;;
       *) break ;;
     esac
   done
@@ -555,7 +588,7 @@ main_menu() {
 }
 
 usage() {
-  sed -n '3,12p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  sed -n '3,13p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 # Non-interactive release: every platform this Mac can build.
@@ -591,6 +624,7 @@ case ${1:-} in
   dev) cmd_dev ;;
   build) cmd_build || exit 1 ;;
   release) shift; release_all "$@" ;;
+  publish) cmd_publish || exit 1 ;;
   check) printf '\n'; cmd_check; printf '\n' ;;
   help | -h | --help) usage ;;
   *) printf 'Unknown command: %s\n\n' "$1"; usage; exit 1 ;;

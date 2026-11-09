@@ -20,6 +20,7 @@
     "desktop:dev": "bun run --cwd apps/desktop desktop:dev",
     "desktop:build": "bun run --cwd apps/desktop desktop:build",
     "desktop:release": "bun run --cwd apps/desktop desktop:release",
+    "desktop:publish": "bun run --cwd apps/desktop desktop:publish",
     "docker:build": "docker build -t compooss:$(node -p \"require('./package.json').version\") --build-arg VERSION=$(node -p \"require('./package.json').version\") .",
     "docker:push": "docker build -t ${DOCKERHUB_USER:-compooss}/compooss:$(node -p \"require('./package.json').version\") --build-arg VERSION=$(node -p \"require('./package.json').version\") . && docker push ${DOCKERHUB_USER:-compooss}/compooss:$(node -p \"require('./package.json').version\")",
     "docker:publish": "VERSION=$(node -p \"require('./package.json').version\") && IMAGE_USER=${DOCKERHUB_USER:-compooss} && IMAGE_NAME=${DOCKER_IMAGE_NAME:-compooss} && docker build -t $IMAGE_USER/$IMAGE_NAME:$VERSION -t $IMAGE_USER/$IMAGE_NAME:latest --build-arg VERSION=$VERSION . && docker push $IMAGE_USER/$IMAGE_NAME:$VERSION && docker push $IMAGE_USER/$IMAGE_NAME:latest"

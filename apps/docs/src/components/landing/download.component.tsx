@@ -4,8 +4,8 @@ import { AnimatedSection } from "@/components/animated-section";
 import desktopRelease from "@/lib/constants/desktop-release.json";
 import {
   DESKTOP_CHECKSUMS_FILE,
-  DESKTOP_DOWNLOADS_BASE_URL,
   DESKTOP_PLATFORMS,
+  DESKTOP_RELEASES_URL,
 } from "@/lib/constants/landing.constants";
 import type { DesktopOs } from "@/lib/types/landing.type";
 import { motion } from "framer-motion";
@@ -42,13 +42,14 @@ const noSubscribe = () => () => {};
 
 const formatSize = (bytes: number) => `${Math.round(bytes / 1024 / 1024)} MB`;
 
-/** The installers on R2, written by apps/desktop/scripts/release.ts. */
+/** The installers on GitHub Releases, written by apps/desktop/scripts/release.ts. */
 const RELEASE: {
   version: string;
+  tag: string;
   downloads: Record<string, { file: string; size: number } | undefined>;
 } = desktopRelease;
-const isPublished = DESKTOP_DOWNLOADS_BASE_URL !== "";
-const releaseUrl = (file: string) => `${DESKTOP_DOWNLOADS_BASE_URL}/${RELEASE.version}/${file}`;
+const releasePageUrl = `${DESKTOP_RELEASES_URL}/tag/${RELEASE.tag}`;
+const releaseUrl = (file: string) => `${DESKTOP_RELEASES_URL}/download/${RELEASE.tag}/${file}`;
 
 export const Download: React.FC = () => {
   // The visitor's OS, selected by default. Unknown during server rendering.
@@ -58,7 +59,7 @@ export const Download: React.FC = () => {
 
   const platform = DESKTOP_PLATFORMS.find((p) => p.os === activeOs)!;
   const [primary, ...alternatives] = platform.downloads.flatMap(({ id, label }) => {
-    const released = isPublished ? RELEASE.downloads[id] : undefined;
+    const released = RELEASE.downloads[id];
     return released ? [{ label, ...released }] : [];
   });
 
@@ -115,11 +116,13 @@ export const Download: React.FC = () => {
                   );
                 })}
               </div>
-              {isPublished && (
-                <span className="hidden rounded-md border border-zinc-700/50 bg-zinc-800/60 px-2.5 py-1 font-mono text-xs text-zinc-300 sm:inline">
-                  v{RELEASE.version}
-                </span>
-              )}
+              <a
+                href={releasePageUrl}
+                title="Release notes on GitHub"
+                className="hidden rounded-md border border-zinc-700/50 bg-zinc-800/60 px-2.5 py-1 font-mono text-xs text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white sm:inline"
+              >
+                v{RELEASE.version}
+              </a>
             </div>
 
             <motion.div

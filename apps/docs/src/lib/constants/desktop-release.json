@@ -1,5 +1,6 @@
 {
   "version": "1.20.1",
+  "tag": "desktop-v1.20.1",
   "downloads": {
     "macos-arm64": {
       "file": "Compooss-1.20.1-macos-arm64.dmg",

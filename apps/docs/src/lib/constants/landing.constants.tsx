@@ -194,15 +194,13 @@ export const USAGE_STEPS = [
 ];
 
 /**
- * Desktop installers are uploaded by hand to Cloudflare R2, one folder per
- * version, so each file is at <DESKTOP_DOWNLOADS_BASE_URL>/<version>/<file>.
- * apps/desktop/scripts/release.ts writes the version and file names to
+ * Desktop installers are published as GitHub releases tagged
+ * desktop-v<version>, so each file is at
+ * <DESKTOP_RELEASES_URL>/download/<tag>/<file>.
+ * apps/desktop/scripts/release.ts writes the version, tag and file names to
  * desktop-release.json. See docs/DESKTOP.md.
- *
- * The R2 bucket's public URL (https://pub-<id>.r2.dev), without a trailing
- * slash. While it's empty, every platform shows "Coming soon".
  */
-export const DESKTOP_DOWNLOADS_BASE_URL: string = "https://pub-bc459496547f4e2bb619f5b2942aa8e3.r2.dev";
+export const DESKTOP_RELEASES_URL = "https://github.com/abdullahmia/compooss/releases";
 export const DESKTOP_CHECKSUMS_FILE = "SHA256SUMS.txt";
 
 export const DESKTOP_PLATFORMS: DesktopPlatform[] = [

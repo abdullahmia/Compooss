@@ -8,7 +8,8 @@
     "prepare-sidecar": "bun scripts/prepare-sidecar.ts",
     "desktop:dev": "tauri dev",
     "desktop:build": "bun scripts/build.ts",
-    "desktop:release": "bun scripts/release.ts"
+    "desktop:release": "bun scripts/release.ts",
+    "desktop:publish": "bun scripts/release.ts --publish"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2.12.4",
