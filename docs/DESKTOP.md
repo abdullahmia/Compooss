@@ -125,6 +125,8 @@ The desktop app has the same version as the web app and the Docker image. releas
 
 The desktop app is released together with the web app and the Docker image, under the same version. Merging release-please's release PR creates the GitHub release `v<version>` and publishes the Docker image. The desktop installers are then built on your Mac and attached to that same release, and the landing page links to them there.
 
+For copy-paste commands, including setting up a new Mac, see [DESKTOP-RELEASE.md](DESKTOP-RELEASE.md).
+
 1. **Merge** release-please's release PR, then update your checkout: `git checkout main && git pull`. The installers are built from your working tree, so it should be the release's commit. If something else was merged since, `git checkout v<version>`. The `bun desktop` menu warns when you're not on it.
 2. **Build** with `bun desktop:release` (or **Release** in the `bun desktop` menu). This builds all four targets into `apps/desktop/release/<version>/`, which git ignores:
    - `Compooss-<version>-macos-arm64.dmg`

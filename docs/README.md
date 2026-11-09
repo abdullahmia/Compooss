@@ -24,6 +24,8 @@ Everything you need to understand, run, and contribute to Compooss.
 | [DEVELOPMENT.md](DEVELOPMENT.md) | Local setup, tech stack, architecture notes, and troubleshooting |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | How to contribute — issues, PRs, coding standards, review process |
 | [FEATURES.md](FEATURES.md) | Complete feature breakdown by release version |
+| [DESKTOP.md](DESKTOP.md) | How the desktop app works, building installers, and troubleshooting |
+| [DESKTOP-RELEASE.md](DESKTOP-RELEASE.md) | Step-by-step commands for building and publishing a release's desktop installers |
 | [CHANGELOG.md](CHANGELOG.md) | Version history and release notes |
 | [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community guidelines and expected behavior |
 | [SECURITY.md](SECURITY.md) | How to report security vulnerabilities privately |

@@ -49,7 +49,7 @@ packages/types/      # @compooss/types — shared TypeScript types (no JS output
 packages/ui/         # @compooss/ui — shared shadcn/ui + Radix primitives
 docker/              # docker-compose files (dev and production)
 scripts/seed.ts      # Dev data seeder (Bun)
-docs/                # DEVELOPMENT.md, FEATURES.md, CONTRIBUTING.md, SHELL.md, DESKTOP.md
+docs/                # DEVELOPMENT.md, FEATURES.md, CONTRIBUTING.md, SHELL.md, DESKTOP.md, DESKTOP-RELEASE.md
 ```
 
 Turborepo builds `@compooss/types` and `@compooss/ui` before `apps/compooss`. `apps/desktop` deliberately has no `build`/`dev`/`lint` scripts, so `bun build`, `bun dev` and the pre-commit hook never need Rust.
