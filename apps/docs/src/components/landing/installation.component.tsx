@@ -1,136 +1,195 @@
 "use client";
 
-import { AnimatedSection } from "@/components/animated-section";
-import { CodeBlock } from "@/components/code-block";
+import { CopyButton } from "@/components/copy-button";
+import { SectionHeader } from "@/components/section-header";
 import {
   DOCKER_COMPOSE_CODE,
+  DOCKER_HUB_URL,
   DOCKER_RUN_CODE,
+  ENV_VARS,
 } from "@/lib/constants/landing.constants";
-import { Code2, Container, ShieldCheck, Terminal, Zap } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
+
+const TABS = [
+  { id: "compose", label: "docker-compose.yml", code: DOCKER_COMPOSE_CODE, highlight: highlightYaml },
+  { id: "run", label: "docker run", code: DOCKER_RUN_CODE, highlight: highlightShell },
+] as const;
+
+/** Lines from the Compooss service down are the ones people add to their file. */
+function addedLines(code: string) {
+  const lines = code.split("\n");
+  const start = lines.findIndex((line) => line.trim() === "compooss:");
+  return start === -1 ? new Set<number>() : new Set(lines.map((_, i) => i).slice(start));
+}
+
+function yamlScalar(text: string): ReactNode {
+  const value = text.trim();
+  if (!value) return text;
+  const lead = text.slice(0, text.length - text.trimStart().length);
+  const color = /^\d+(\.\d+)?$/.test(value) ? "text-json-number" : "text-json-string";
+  return (
+    <>
+      {lead}
+      <span className={color}>{value}</span>
+    </>
+  );
+}
+
+function highlightYaml(line: string): ReactNode {
+  const pair = /^(\s*)([\w.-]+)(:)(.*)$/.exec(line);
+  if (pair) {
+    const [, indent, key, colon, rest] = pair;
+    return (
+      <>
+        {indent}
+        <span className="text-json-key">{key}</span>
+        <span className="text-fg-muted">{colon}</span>
+        {yamlScalar(rest)}
+      </>
+    );
+  }
+  const item = /^(\s*)(- )(.*)$/.exec(line);
+  if (item) {
+    const [, indent, dash, rest] = item;
+    return (
+      <>
+        {indent}
+        <span className="text-fg-muted">{dash}</span>
+        {yamlScalar(rest)}
+      </>
+    );
+  }
+  return line;
+}
+
+function highlightShell(line: string): ReactNode {
+  if (line.trimStart().startsWith("#")) {
+    return <span className="text-fg-muted">{line}</span>;
+  }
+  return line.split(/(\s+)/).map((token, i) => {
+    if (token === "\\") return <span key={i} className="text-fg-muted">{token}</span>;
+    if (token.startsWith("-")) return <span key={i} className="text-fg-secondary">{token}</span>;
+    if (token.includes("/") || token.includes(":")) {
+      return <span key={i} className="text-json-string">{token}</span>;
+    }
+    return token;
+  });
+}
 
 export const Installation: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"compose" | "run">("compose");
+  const [activeTab, setActiveTab] = useState<(typeof TABS)[number]["id"]>("compose");
+  const tab = TABS.find((t) => t.id === activeTab)!;
+  const added = addedLines(tab.code);
 
   return (
-    <section id="installation" className="relative py-20 md:py-28">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-emerald-500/[0.03] to-transparent" />
-
-      <div className="relative mx-auto max-w-4xl px-6">
-        <AnimatedSection className="mb-14 text-center">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-emerald-400">
-            Installation
-          </p>
-          <h2 className="text-3xl font-bold tracking-tight text-white md:text-5xl">
-            Install in seconds with Docker
-          </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-zinc-400">
-            Add Compooss to your existing docker-compose.yml or run it as a
-            standalone Docker container. No build steps, no dependencies, no
-            configuration files needed.
-          </p>
-        </AnimatedSection>
-
-        <AnimatedSection delay={0.1}>
-          <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900/50 shadow-2xl shadow-black/40 backdrop-blur-sm">
-            {/* Tab bar */}
-            <div className="flex items-center justify-between border-b border-white/[0.06] bg-zinc-950/60 px-4 py-3">
-              <div className="flex items-center gap-1 rounded-lg bg-zinc-800/50 p-1">
-                <button
-                  onClick={() => setActiveTab("compose")}
-                  className={`flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-xs font-medium transition-all ${
-                    activeTab === "compose"
-                      ? "bg-zinc-700 text-white shadow-sm"
-                      : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  <Code2 size={12} />
-                  Docker Compose
-                  {activeTab === "compose" && (
-                    <span className="ml-0.5 rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-400">
-                      Recommended
-                    </span>
-                  )}
-                </button>
-                <button
-                  onClick={() => setActiveTab("run")}
-                  className={`flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-xs font-medium transition-all ${
-                    activeTab === "run"
-                      ? "bg-zinc-700 text-white shadow-sm"
-                      : "text-zinc-500 hover:text-zinc-300"
-                  }`}
-                >
-                  <Terminal size={12} />
-                  Docker Run
-                </button>
-              </div>
-              <div className="hidden items-center gap-2 sm:flex">
-                <span className="text-xs text-zinc-600">Image:</span>
-                <code className="rounded-md border border-zinc-700/50 bg-zinc-800/60 px-2.5 py-1 font-mono text-xs text-zinc-300">
-                  abdullahmia/compooss:latest
+    <section id="installation" className="py-12 md:py-16">
+      <div className="mx-auto grid max-w-[1200px] items-start gap-12 px-4 sm:px-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:px-8">
+        <div>
+          <SectionHeader
+            namespace="install"
+            title="Add one service to your compose file"
+            description={
+              <>
+                Put Compooss next to MongoDB in your existing{" "}
+                <code className="whitespace-nowrap font-mono text-[15px] text-fg">
+                  docker-compose.yml
                 </code>
-              </div>
-            </div>
+                , or run it on its own with{" "}
+                <code className="whitespace-nowrap font-mono text-[15px] text-fg">
+                  docker run
+                </code>
+                . There&apos;s nothing to build and no config file to write.
+              </>
+            }
+          />
 
-            {/* Code area */}
-            <div className="p-5">
-              {activeTab === "compose" ? (
-                <CodeBlock
-                  code={DOCKER_COMPOSE_CODE}
-                  language="yaml"
-                  filename="docker-compose.yml"
-                />
-              ) : (
-                <CodeBlock
-                  code={DOCKER_RUN_CODE}
-                  language="bash"
-                  filename="terminal"
-                />
-              )}
-            </div>
-
-            {/* Env vars footer */}
-            <div className="border-t border-white/[0.06] bg-zinc-950/40 px-5 py-4">
-              <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-zinc-600">
-                Environment Variables
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <div className="flex items-center gap-2.5 rounded-lg border border-zinc-800/60 bg-zinc-900/60 px-3.5 py-2.5">
-                  <code className="font-mono text-xs font-semibold text-emerald-400">
-                    PORT
-                  </code>
-                  <span className="text-zinc-700">—</span>
-                  <span className="text-xs text-zinc-400">
-                    Server port.{" "}
-                    <code className="font-mono text-zinc-300">
-                      Default: 3000
-                    </code>
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </AnimatedSection>
-
-        {/* Trust signals */}
-        <AnimatedSection delay={0.2} className="mt-4">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {[
-              { icon: <Zap size={14} />, label: "Zero config" },
-              { icon: <ShieldCheck size={14} />, label: "MIT Licensed" },
-              { icon: <Container size={14} />, label: "Single container" },
-              { icon: <Code2 size={14} />, label: "No signup required" },
-            ].map(({ icon, label }) => (
-              <div
-                key={label}
-                className="flex items-center justify-center gap-2 rounded-xl border border-white/[0.05] bg-zinc-900/30 px-4 py-3 text-sm text-zinc-400"
-              >
-                <span className="text-emerald-400">{icon}</span>
-                {label}
+          <h3 className="mt-12 text-sm font-medium text-fg">
+            Environment variables
+          </h3>
+          <dl className="mt-4 border-b border-line">
+            {ENV_VARS.map((envVar) => (
+              <div key={envVar.names[0]} className="border-t border-line py-4">
+                <dt className="flex flex-wrap gap-x-3 font-mono text-[13px] text-fg">
+                  {envVar.names.map((name) => (
+                    <span key={name}>{name}</span>
+                  ))}
+                </dt>
+                <dd className="mt-1 text-sm text-fg-secondary">
+                  {envVar.description}
+                </dd>
               </div>
             ))}
+          </dl>
+        </div>
+
+        <div className="overflow-hidden rounded-2xl border border-line bg-deep">
+          <div className="flex h-11 items-center justify-between border-b border-line px-2">
+            <div role="tablist" aria-label="Install method" className="flex h-full">
+              {TABS.map((t) => {
+                const isActive = t.id === activeTab;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setActiveTab(t.id)}
+                    className={`-mb-px border-b-2 px-3 font-mono text-xs transition-colors duration-150 ease-out ${
+                      isActive
+                        ? "border-fg text-fg"
+                        : "border-transparent text-fg-muted hover:text-fg-secondary"
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+            <CopyButton text={tab.code} label={`Copy ${tab.label}`} />
           </div>
-        </AnimatedSection>
+
+          <pre
+            role="tabpanel"
+            className="overflow-x-auto py-4 font-mono text-xs leading-6 text-fg sm:text-[13px]"
+          >
+            <code>
+              {tab.code.split("\n").map((line, i) => (
+                <div
+                  key={i}
+                  className={`flex min-w-max pr-4 sm:pr-6 ${added.has(i) ? "bg-accent/[0.08]" : ""}`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="w-10 shrink-0 select-none pr-3 text-right text-fg-muted/60 sm:w-12 sm:pr-4"
+                  >
+                    {i + 1}
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    className="w-5 shrink-0 select-none text-accent sm:w-6"
+                  >
+                    {added.has(i) ? "+" : ""}
+                  </span>
+                  <span>{tab.highlight(line) || " "}</span>
+                </div>
+              ))}
+            </code>
+          </pre>
+
+          <div className="flex h-11 items-center justify-between gap-4 border-t border-line px-4 text-xs">
+            <span className="truncate font-mono text-fg-muted">
+              abdullahmia/compooss:latest
+            </span>
+            <a
+              href={DOCKER_HUB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-fg-secondary transition-colors duration-150 ease-out hover:text-fg"
+            >
+              Docker Hub
+            </a>
+          </div>
+        </div>
       </div>
     </section>
   );

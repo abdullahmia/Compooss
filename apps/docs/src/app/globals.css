@@ -1,91 +1,81 @@
 @import "tailwindcss";
 
-@theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", "Source Code Pro",
-    monospace;
+@theme inline {
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+}
 
-  --color-emerald-400: #34d399;
-  --color-emerald-500: #10b981;
-  --color-emerald-600: #059669;
+@theme {
+  /* The cool graphite of the app's own dark theme (hue 200). */
+  --color-deep: #0c0e0f;
+  --color-page: #111314;
+  --color-card: #161819;
+  --color-raised: #1f2224;
+  --color-line: rgb(233 236 238 / 0.08);
+  --color-line-strong: rgb(233 236 238 / 0.14);
+  --color-fg: #e9ecee;
+  --color-fg-secondary: #a3a9ad;
+  --color-fg-muted: #7e868b;
+
+  /* The app's primary green, hsl(145 63% 42%). Used rarely. */
+  --color-accent: #28af60;
+
+  /* The JSON colours of the app's dark theme. */
+  --color-json-key: #70b8db;
+  --color-json-string: #53c683;
+  --color-json-number: #eb9947;
+  --color-json-boolean: #b870db;
+  --color-json-null: #cc6666;
+
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html {
+  color-scheme: dark;
   scroll-behavior: smooth;
+  scroll-padding-top: 72px;
 }
 
 body {
-  background: #09090b;
-  color: #fafafa;
+  background: var(--color-page);
+  color: var(--color-fg);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection {
-  background: #10b98140;
+  background: rgb(40 175 96 / 0.3);
   color: #fff;
 }
 
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
-@keyframes glow-pulse {
-  0%,
-  100% {
-    opacity: 0.4;
+/* The one entrance on the page: the hero fades and rises once. */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-  50% {
-    opacity: 0.8;
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
-@keyframes gradient-shift {
-  0% {
-    background-position: 0% 50%;
+.rise {
+  animation: rise 480ms var(--ease-out) both;
+  animation-delay: calc(var(--rise-step, 0) * 60ms);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
   }
-  50% {
-    background-position: 100% 50%;
+
+  .rise {
+    animation: none;
   }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-.animate-glow-pulse {
-  animation: glow-pulse 3s ease-in-out infinite;
-}
-
-.animate-gradient {
-  background-size: 200% 200%;
-  animation: gradient-shift 4s ease infinite;
-}
-
-.hero-preview-wrapper:hover [style*="preserve-3d"] {
-  transform: rotateX(0deg);
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.code-block {
-  counter-reset: line;
-}
-
-.code-block .line::before {
-  counter-increment: line;
-  content: counter(line);
-  display: inline-block;
-  width: 2rem;
-  margin-right: 1rem;
-  text-align: right;
-  color: #3f3f46;
 }

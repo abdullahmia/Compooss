@@ -1,3 +1,5 @@
+import type { LucideIcon } from "lucide-react";
+
 export type ComparisonValue = "yes" | "no" | "partial" | string;
 
 export type ComparisonRow = {
@@ -6,6 +8,31 @@ export type ComparisonRow = {
   compass: ComparisonValue;
   mongoExpress: ComparisonValue;
   studio3t: ComparisonValue;
+};
+
+export type ComparisonTool = {
+  key: Exclude<keyof ComparisonRow, "feature">;
+  name: string;
+  /** For the competitor switcher on small screens. */
+  shortName: string;
+  description: string;
+  highlight: boolean;
+};
+
+export type Feature = {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+};
+
+export type OperationGroup = {
+  title: string;
+  items: string[];
+};
+
+export type EnvVar = {
+  names: string[];
+  description: string;
 };
 
 export type DesktopOs = "macos" | "windows" | "linux";
