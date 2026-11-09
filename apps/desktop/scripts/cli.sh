@@ -4,10 +4,9 @@
 #
 #   bun desktop                    open the menu
 #   bun desktop dev                desktop window on the Next.js dev server
-#   bun desktop build              package the app for this Mac (version unchanged)
-#   bun desktop release [--minor | --major | --no-bump] [--yes]
-#                                  bump the version and build every platform this Mac can
-#   bun desktop publish            upload the built version to its GitHub release
+#   bun desktop build              package the app for this Mac, for testing
+#   bun desktop release [--yes]    build the current version for every platform this Mac can
+#   bun desktop publish            attach the built installers to the version's GitHub release
 #   bun desktop check              show which platforms this Mac can build
 #
 # It drives build.ts and release.ts next to it; see docs/DESKTOP.md.
@@ -19,7 +18,7 @@ DESKTOP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_ROOT="$(cd "$DESKTOP_DIR/../.." && pwd)"
 RELEASE_DIR="$DESKTOP_DIR/release"
 LOG_DIR="$RELEASE_DIR/logs"
-VERSION_FILES=(apps/desktop/package.json apps/docs/src/lib/constants/desktop-release.json)
+MANIFEST_FILE=apps/docs/src/lib/constants/desktop-release.json
 # rustup installs here, and it may not be on PATH yet.
 export PATH="$HOME/.cargo/bin:$PATH"
 
@@ -89,18 +88,19 @@ current_version() {
 }
 
 # Same as releaseTag() in release.ts.
-release_tag() { echo "desktop-v$1"; }
+release_tag() { echo "v$1"; }
 
-# next_version 1.2.3 patch|minor|major|none
-next_version() {
-  local IFS=.
-  local parts=($1)
-  case $2 in
-    major) echo "$((parts[0] + 1)).0.0" ;;
-    minor) echo "${parts[0]}.$((parts[1] + 1)).0" ;;
-    patch) echo "${parts[0]}.${parts[1]}.$((parts[2] + 1))" ;;
-    *) echo "$1" ;;
-  esac
+# Warns when the working tree isn't the commit release-please tagged for
+# VERSION, since that's what the installers are built from.
+tag_warning() {
+  local tag tagged
+  tag=$(release_tag "$1")
+  tagged=$(git -C "$REPO_ROOT" rev-parse -q --verify "refs/tags/$tag^{commit}" 2>/dev/null)
+  if [[ -z $tagged ]]; then
+    printf "  %s! There's no %s tag yet. Merge release-please's release PR, then git pull.%s\n" "$YELLOW" "$tag" "$RESET"
+  elif [[ $tagged != $(git -C "$REPO_ROOT" rev-parse HEAD) ]]; then
+    printf "  %s! This isn't %s, so the installers won't match that release's code.%s\n" "$YELLOW" "$tag" "$RESET"
+  fi
 }
 
 uncommitted_changes() { git -C "$REPO_ROOT" status --porcelain 2>/dev/null | wc -l | tr -d ' '; }
@@ -320,8 +320,8 @@ show_release() {
     printf '    %-44s %s%7s%s\n' "$(basename "$file")" "$GRAY" "$(human_size "$(wc -c <"$file" | tr -d ' ')")" "$RESET"
   done
   printf '\n  %sNext%s\n' "$BOLD" "$RESET"
-  printf '    1. Commit the new version (%s and %s) and push it\n' "${VERSION_FILES[0]}" "$(basename "${VERSION_FILES[1]}")"
-  printf '    2. Publish it as the GitHub release %s%s%s\n' "$BOLD" "$(release_tag "$1")" "$RESET"
+  printf '    1. Publish: attach them to the GitHub release %s%s%s\n' "$BOLD" "$(release_tag "$1")" "$RESET"
+  printf '    2. Commit %s and get it into main\n' "$(basename "$MANIFEST_FILE")"
   printf '    3. Deploy the docs site\n\n'
 }
 
@@ -343,7 +343,7 @@ cmd_build() {
   local version log dmg
   version=$(current_version)
   header
-  printf '  %sTest build%s  %sfor this Mac · version %s stays the same%s\n\n' "$BOLD" "$RESET" "$GRAY" "$version" "$RESET"
+  printf '  %sTest build%s  %sfor this Mac · version %s%s\n\n' "$BOLD" "$RESET" "$GRAY" "$version" "$RESET"
   log=$(new_log build)
   if ! run_step "Building" "$log" bun "$DESKTOP_DIR/scripts/build.ts"; then
     show_failure "$log"
@@ -360,52 +360,41 @@ cmd_build() {
   esac
 }
 
-# release_flow patch|minor|major|none
+# Builds the installers for the current version, which release-please sets.
 release_flow() {
-  local bump=$1 current next changes i names=""
-  current=$(current_version)
-  next=$(next_version "$current" "$bump")
+  local version changes i names=""
+  version=$(current_version)
   header
   pick_platforms || return
   for i in "${PICKED[@]}"; do names="${names:+$names, }${NAMES[i]}"; done
   changes=$(uncommitted_changes)
 
   printf '\n  %sSummary%s\n' "$BOLD" "$RESET"
-  if [[ $bump == none ]]; then
-    printf '    Version    %s %s(rebuild)%s\n' "$next" "$GRAY" "$RESET"
-  else
-    printf '    Version    %s → %s%s%s\n' "$current" "$ACCENT$BOLD" "$next" "$RESET"
-  fi
+  printf '    Version    %s\n' "$version"
   printf '    Platforms  %s\n' "$names"
-  printf '    Output     %s\n' "$(relative "$RELEASE_DIR/$next")"
-  ((changes > 0)) && printf '\n  %s! %s uncommitted changes will be part of this build.%s\n' "$YELLOW" "$changes" "$RESET"
+  printf '    Output     %s\n\n' "$(relative "$RELEASE_DIR/$version")"
+  tag_warning "$version"
+  ((changes > 0)) && printf '  %s! %s uncommitted changes will be part of this build.%s\n' "$YELLOW" "$changes" "$RESET"
   [[ " ${PICKED[*]} " == *" 3 "* ]] && printf '  %s! Linux builds in Docker under emulation, which is the slow part.%s\n' "$YELLOW" "$RESET"
   printf '\n'
   confirm "Start the build?" || return
-  run_release "$bump" "$next" "${PICKED[@]}"
+  run_release "$version" "${PICKED[@]}"
 }
 
-# run_release BUMP VERSION INDEX...
+# run_release VERSION INDEX...
 run_release() {
-  local bump=$1 version=$2 log start=$SECONDS first=1 idx
-  shift 2
+  local version=$1 log start=$SECONDS first=1 idx
+  shift
   local args=()
   log=$(new_log "release-$version")
   printf '\n  %sBuilding Compooss %s%s\n\n' "$BOLD" "$version" "$RESET"
   for idx in "$@"; do
     args=(--targets "${TRIPLES[idx]}")
-    if ((first)); then
-      case $bump in
-        none) args+=(--no-bump) ;;
-        minor | major) args+=("--$bump") ;;
-      esac
-    else
-      args+=(--no-bump --skip-server)
-    fi
+    # The server tree is the same for every platform, so build it once.
+    ((first)) || args+=(--skip-server)
     if ! run_step "${NAMES[idx]}" "$log" bun "$DESKTOP_DIR/scripts/release.ts" "${args[@]}"; then
       show_failure "$log"
-      printf '\n  The version is now %s%s%s. Fix the problem, then use %sRebuild%s to retry\n  without bumping it again.\n' \
-        "$BOLD" "$(current_version)" "$RESET" "$BOLD" "$RESET"
+      printf '\n  Fix the problem, then build that platform again.\n'
       pause
       return 1
     fi
@@ -416,16 +405,16 @@ run_release() {
   release_actions "$version"
 }
 
-commit_version() {
-  local log
-  if git -C "$REPO_ROOT" diff --quiet -- "${VERSION_FILES[@]}"; then
-    MESSAGE="Nothing to commit: the version files haven't changed."
+commit_manifest() {
+  local log message="chore(desktop): link the $1 installers on the landing page"
+  if git -C "$REPO_ROOT" diff --quiet -- "$MANIFEST_FILE"; then
+    MESSAGE="Nothing to commit: $(basename "$MANIFEST_FILE") hasn't changed."
     return
   fi
   log=$(new_log commit)
   printf '\n'
-  if run_step "Committing $1" "$log" git -C "$REPO_ROOT" commit -m "chore(desktop): release $1" -- "${VERSION_FILES[@]}"; then
-    MESSAGE="Committed \"chore(desktop): release $1\". Push it, then publish."
+  if run_step "Committing $1" "$log" git -C "$REPO_ROOT" commit -m "$message" -- "$MANIFEST_FILE"; then
+    MESSAGE="Committed \"$message\". Get it into main, then deploy the docs site."
   else
     show_failure "$log"
     pause
@@ -442,14 +431,14 @@ release_actions() {
     [[ -n $MESSAGE ]] && printf '  %s%s%s\n\n' "$ACCENT" "$MESSAGE" "$RESET"
     MESSAGE=""
     choose "What now?" \
-      "Commit|Commit the new version files" \
-      "Publish|Upload to the GitHub release $(release_tag "$version")" \
+      "Publish|Attach them to the GitHub release $(release_tag "$version")" \
+      "Commit|Commit $(basename "$MANIFEST_FILE") for the landing page" \
       "Open folder|Show it in Finder" \
       "Copy path|Copy the folder path to the clipboard" \
       "Done|Back to the menu"
     case $CHOICE in
-      0) commit_version "$version" ;;
-      1) publish_version "$version" ;;
+      0) publish_version "$version" ;;
+      1) commit_manifest "$version" ;;
       2) open "$dir" ;;
       3) printf '%s' "$dir" | pbcopy && MESSAGE="Copied $dir" ;;
       *) return ;;
@@ -464,7 +453,7 @@ publish_version() {
   printf '\n'
   if run_step "Publishing $1" "$log" bun "$DESKTOP_DIR/scripts/release.ts" --publish; then
     url=$(grep -oE 'https://github\.com/[^[:space:]]+/releases/tag/[^[:space:]]+' "$log" | tail -1)
-    MESSAGE="Published ${url:-$(release_tag "$1")}. Deploy the docs site next."
+    MESSAGE="Published ${url:-$(release_tag "$1")}. Commit $(basename "$MANIFEST_FILE") next."
   else
     show_failure "$log" "Publishing failed."
     pause
@@ -480,20 +469,6 @@ cmd_publish() {
   MESSAGE=""
   publish_version "$version" || return 1
   printf '\n  %s%s%s\n\n' "$ACCENT" "$MESSAGE" "$RESET"
-}
-
-cmd_release() {
-  local v
-  v=$(current_version)
-  header
-  local patch minor major
-  printf -v patch '%-20s %s' "$v → $(next_version "$v" patch)" "fixes and small changes"
-  printf -v minor '%-20s %s' "$v → $(next_version "$v" minor)" "new features"
-  printf -v major '%-20s %s' "$v → $(next_version "$v" major)" "big or breaking changes"
-  choose "How big is this release?" "Patch|$patch" "Minor|$minor" "Major|$major"
-  ((CHOICE < 0)) && return
-  local bumps=(patch minor major)
-  release_flow "${bumps[CHOICE]}"
 }
 
 cmd_refresh() {
@@ -564,23 +539,21 @@ main_menu() {
     v=$(current_version)
     choose "What do you want to do?" \
       "Develop|Desktop window on the dev server, with live reload" \
-      "Test build|Package the app for this Mac (stays $v)" \
-      "Release|New version: bump $v and build the installers" \
-      "Rebuild|Rebuild platforms for $v, e.g. after a failed build" \
+      "Test build|Package the app for this Mac" \
+      "Release|Build the $v installers, e.g. after release-please's release" \
       "Refresh|Rescan release/$v for the checksums and landing page" \
-      "Publish|Upload release/$v to its GitHub release" \
+      "Publish|Attach release/$v to the GitHub release $(release_tag "$v")" \
       "Open folder|Show release/$v in Finder" \
       "Check setup|See which platforms this Mac can build" \
       "Quit|"
     case $CHOICE in
       0) cmd_dev ;;
       1) cmd_build; pause ;;
-      2) cmd_release ;;
-      3) release_flow none ;;
-      4) cmd_refresh ;;
-      5) cmd_publish; pause ;;
-      6) cmd_open ;;
-      7) header; cmd_check; pause ;;
+      2) release_flow ;;
+      3) cmd_refresh ;;
+      4) cmd_publish; pause ;;
+      5) cmd_open ;;
+      6) header; cmd_check; pause ;;
       *) break ;;
     esac
   done
@@ -588,17 +561,14 @@ main_menu() {
 }
 
 usage() {
-  sed -n '3,13p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  sed -n '3,12p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 # Non-interactive release: every platform this Mac can build.
 release_all() {
-  local bump=patch yes=0 i current next
+  local yes=0 i version
   for arg in "$@"; do
     case $arg in
-      --minor) bump=minor ;;
-      --major) bump=major ;;
-      --no-bump) bump=none ;;
       --yes | -y) yes=1 ;;
       *) printf 'Unknown option: %s\n\n' "$arg"; usage; exit 1 ;;
     esac
@@ -608,14 +578,14 @@ release_all() {
     [[ -z $(platform_blocker "$i") ]] && PICKED+=("$i")
   done
   ((${#PICKED[@]} > 0)) || { cmd_check; exit 1; }
-  current=$(current_version)
-  next=$(next_version "$current" "$bump")
-  printf '\n  %sCompooss %s%s  %s%s%s\n' "$BOLD" "$next" "$RESET" "$GRAY" "$([[ $bump == none ]] && echo rebuild || echo "from $current")" "$RESET"
+  version=$(current_version)
+  printf '\n  %sCompooss %s%s\n\n' "$BOLD" "$version" "$RESET"
+  tag_warning "$version"
   if ((!yes && INTERACTIVE)); then
     printf '\n'
     confirm "Build ${#PICKED[@]} platform(s)?" || exit 1
   fi
-  run_release "$bump" "$next" "${PICKED[@]}" || exit 1
+  run_release "$version" "${PICKED[@]}" || exit 1
 }
 
 case ${1:-} in

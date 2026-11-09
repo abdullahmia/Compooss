@@ -1,21 +1,22 @@
 /**
- * Builds a new desktop version and publishes it as a GitHub release.
+ * Builds the desktop installers for the current version and attaches them to
+ * its GitHub release.
  *
- *   bun scripts/release.ts                    bump the patch version, build every target
- *   bun scripts/release.ts --minor | --major  bump that part instead
- *   bun scripts/release.ts --no-bump          rebuild the current version (e.g. after a failed build)
+ *   bun scripts/release.ts                    build every target
  *   bun scripts/release.ts --targets a,b      build only these target triples
  *   bun scripts/release.ts --skip-server      reuse the server tree from the previous build
  *   bun scripts/release.ts --manifest-only    don't build; refresh the checksums and landing page
  *                                             manifest from what's in release/<version>/
- *   bun scripts/release.ts --publish          don't build; upload release/<version>/ to the
- *                                             GitHub release desktop-v<version>
+ *   bun scripts/release.ts --publish          don't build; attach release/<version>/ to the
+ *                                             GitHub release v<version>
  *
- * Installers go to apps/desktop/release/<version>/ with versioned names, next
- * to SHA256SUMS.txt. --publish uploads them with the GitHub CLI, so each file
- * is at github.com/<repo>/releases/download/desktop-v<version>/<file>. The
- * landing page builds its links from
- * apps/docs/src/lib/constants/desktop-release.json, which this script writes.
+ * The desktop app shares its version with the web app and the Docker image.
+ * release-please bumps it in apps/desktop/package.json and creates the GitHub
+ * release v<version> when its release PR is merged. Installers go to
+ * apps/desktop/release/<version>/ with versioned names, next to
+ * SHA256SUMS.txt, and --publish uploads them to that release. The landing page
+ * builds its links from apps/docs/src/lib/constants/desktop-release.json,
+ * which this script writes.
  */
 import { copyFileSync, existsSync, mkdirSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -30,7 +31,6 @@ import {
   hasFlag,
   output,
   run,
-  setAppVersion,
 } from "./shared";
 
 const RELEASE_DIR = path.join(DESKTOP_DIR, "release");
@@ -39,10 +39,8 @@ const MANIFEST_FILE = path.join(
   "apps/docs/src/lib/constants/desktop-release.json",
 );
 const CHECKSUMS_FILE = "SHA256SUMS.txt";
-/** What a release commits: the new version and the landing page manifest. */
-const VERSION_FILES = [path.join(DESKTOP_DIR, "package.json"), MANIFEST_FILE].map((file) =>
-  path.relative(REPO_ROOT, file),
-);
+/** Starts the section that --publish adds to the release notes. */
+const NOTES_HEADING = "### Desktop app";
 
 /**
  * What each target produces. The ids are what the landing page refers to
@@ -68,12 +66,8 @@ const ARTIFACTS: Record<
 
 const fileName = (version: string, suffix: string) => `Compooss-${version}-${suffix}`;
 
-/**
- * Desktop releases get their own tags: plain v<version> tags are the
- * web/Docker releases that release-please makes, and the desktop app has its
- * own version.
- */
-const releaseTag = (version: string) => `desktop-v${version}`;
+/** The tag release-please gives a version (include-v-in-tag in release-please-config.json). */
+const releaseTag = (version: string) => `v${version}`;
 
 const targets = argValue("targets")?.split(",") ?? Object.keys(TARGETS);
 for (const triple of targets) {
@@ -84,11 +78,6 @@ if (hasFlag("publish")) {
   publish(appVersion());
 } else {
   if (!hasFlag("manifest-only")) {
-    if (!hasFlag("no-bump")) {
-      const next = bumpVersion(appVersion(), hasFlag("major") ? "major" : hasFlag("minor") ? "minor" : "patch");
-      setAppVersion(next);
-      console.log(`Desktop version: ${next}\n`);
-    }
     const version = appVersion();
     const outDir = path.join(RELEASE_DIR, version);
     mkdirSync(outDir, { recursive: true });
@@ -104,14 +93,6 @@ if (hasFlag("publish")) {
   }
 
   await writeChecksumsAndManifest(appVersion());
-}
-
-function bumpVersion(version: string, part: "major" | "minor" | "patch"): string {
-  const [major, minor, patch] = version.split(".").map(Number);
-  if ([major, minor, patch].some(Number.isNaN)) throw new Error(`Can't bump version "${version}".`);
-  if (part === "major") return `${major + 1}.0.0`;
-  if (part === "minor") return `${major}.${minor + 1}.0`;
-  return `${major}.${minor}.${patch + 1}`;
 }
 
 /** The installers in release/<version>/, in ARTIFACTS order. */
@@ -154,17 +135,17 @@ async function writeChecksumsAndManifest(version: string) {
       `  ${CHECKSUMS_FILE}`,
       "",
       "Next:",
-      `  1. Commit ${VERSION_FILES.join(" and ")}, and push.`,
-      `  2. Publish the GitHub release ${releaseTag(version)}: bun desktop publish.`,
+      `  1. Attach them to the GitHub release ${releaseTag(version)}: bun desktop publish.`,
+      `  2. Commit ${path.relative(REPO_ROOT, MANIFEST_FILE)} and merge it into main.`,
       "  3. Deploy the docs site.",
     ].join("\n"),
   );
 }
 
 /**
- * Uploads release/<version>/ to the GitHub release desktop-v<version>. The
- * first time, it creates the release and its tag at HEAD. After that, it
- * replaces the files, e.g. after rebuilding one platform.
+ * Uploads release/<version>/ to the GitHub release v<version> and adds the
+ * download instructions to its notes. Running it again replaces the files and
+ * that section, e.g. after rebuilding one platform.
  */
 function publish(version: string) {
   const tag = releaseTag(version);
@@ -179,27 +160,26 @@ function publish(version: string) {
 
   if (!Bun.which("gh")) throw new Error("Publishing needs the GitHub CLI: brew install gh");
   if (!succeeds(["gh", "auth", "status"])) throw new Error("The GitHub CLI isn't logged in. Run: gh auth login");
-
-  if (succeeds(["gh", "release", "view", tag])) {
-    run(["gh", "release", "upload", tag, ...files, "--clobber"]);
-    console.log(`\nReplaced the files of ${tag}.`);
-    return;
+  if (!succeeds(["gh", "release", "view", tag])) {
+    throw new Error(
+      `There's no GitHub release ${tag} yet. release-please creates it when you merge its release PR.`,
+    );
   }
 
-  // The tag goes on HEAD, so HEAD has to be the version commit, and on GitHub.
-  if (output(["git", "status", "--porcelain", "--", ...VERSION_FILES]) !== "") {
-    throw new Error(`Commit ${VERSION_FILES.join(" and ")} first.`);
-  }
-  const sha = output(["git", "rev-parse", "HEAD"]);
-  if (!succeeds(["gh", "api", `repos/{owner}/{repo}/commits/${sha}`, "--silent"])) {
-    throw new Error(`Push ${sha.slice(0, 7)} to GitHub first: the release's tag points at it.`);
-  }
+  run(["gh", "release", "upload", tag, ...files, "--clobber"]);
 
-  const notes = path.join(tmpdir(), `compooss-${tag}-notes.md`);
+  // release-please wrote the changelog; replace only the desktop section.
+  const notes = output(["gh", "release", "view", tag, "--json", "body", "--jq", ".body"]);
+  const changelog = notes.split(NOTES_HEADING)[0].trimEnd();
+  const notesFile = path.join(tmpdir(), `compooss-${tag}-notes.md`);
   writeFileSync(
-    notes,
+    notesFile,
     [
-      `The Compooss desktop app, version ${version}. Download the installer for your system from **Assets** below.`,
+      changelog,
+      "",
+      NOTES_HEADING,
+      "",
+      "Download the installer for your system from **Assets** below:",
       "",
       ...installers.map(({ label, file }) => `- **${label}**: \`${file}\``),
       "",
@@ -211,22 +191,10 @@ function publish(version: string) {
       "",
     ].join("\n"),
   );
-  run([
-    "gh",
-    "release",
-    "create",
-    tag,
-    ...files,
-    "--title",
-    `Compooss Desktop ${version}`,
-    "--notes-file",
-    notes,
-    "--target",
-    sha,
-    // Keep the repo's "Latest" badge on the web/Docker release.
-    "--latest=false",
-  ]);
-  console.log("\nNext: deploy the docs site, so the landing page links to this release.");
+  run(["gh", "release", "edit", tag, "--notes-file", notesFile]);
+
+  const url = output(["gh", "release", "view", tag, "--json", "url", "--jq", ".url"]);
+  console.log(`\nPublished ${url}`);
 }
 
 /** Runs a command quietly and reports whether it exited with 0. */

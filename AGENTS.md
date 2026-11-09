@@ -26,8 +26,8 @@ bun storybook        # Storybook for @compooss/ui (port 6006)
 bun desktop            # Interactive menu: develop, test build, release, rebuild, check setup
 bun desktop:dev        # Desktop window on the Next.js dev server
 bun desktop:build      # Installers for this machine (--target <triple> for others)
-bun desktop:release    # Bump the desktop version, build all targets into apps/desktop/release/<version>/
-bun desktop:publish    # Upload release/<version>/ to the GitHub release desktop-v<version> (needs gh)
+bun desktop:release    # Build all targets for the current version into apps/desktop/release/<version>/
+bun desktop:publish    # Attach them to the GitHub release v<version> that release-please made (needs gh)
 
 # Docker
 bun run docker:build   # Build Docker image locally

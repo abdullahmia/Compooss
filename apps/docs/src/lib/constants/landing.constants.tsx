@@ -194,8 +194,8 @@ export const USAGE_STEPS = [
 ];
 
 /**
- * Desktop installers are published as GitHub releases tagged
- * desktop-v<version>, so each file is at
+ * Desktop installers are attached to the GitHub release of each version (the
+ * v<version> release that release-please creates), so each file is at
  * <DESKTOP_RELEASES_URL>/download/<tag>/<file>.
  * apps/desktop/scripts/release.ts writes the version, tag and file names to
  * desktop-release.json. See docs/DESKTOP.md.
