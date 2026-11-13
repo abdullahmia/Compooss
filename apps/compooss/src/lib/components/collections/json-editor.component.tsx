@@ -1,17 +1,27 @@
 "use client";
 
 import { defineMonacoThemes } from "@/lib/components/collections/monaco-themes";
-import Editor from "@monaco-editor/react";
-import type { editor } from "monaco-editor";
+import Editor, { type BeforeMount, type OnMount } from "@monaco-editor/react";
 import { useTheme } from "next-themes";
 
 type Props = {
   value: string;
   onChange: (value: string) => void;
   height?: string;
+  onMount?: OnMount;
 }
 
-export const JsonEditor: React.FC<Props> = ({ value, onChange, height = "260px" }) => {
+const handleBeforeMount: BeforeMount = (monaco) => {
+  defineMonacoThemes(monaco);
+  // Callers strip comments before parsing, so the editor shouldn't flag them.
+  monaco.json?.jsonDefaults.setDiagnosticsOptions({
+    ...monaco.json.jsonDefaults.diagnosticsOptions,
+    allowComments: true,
+    comments: "ignore",
+  });
+};
+
+export const JsonEditor: React.FC<Props> = ({ value, onChange, height = "260px", onMount }) => {
   const { resolvedTheme } = useTheme();
 
   const monacoTheme = resolvedTheme === "light" ? "compooss-light" : "compooss-dark";
@@ -20,13 +30,14 @@ export const JsonEditor: React.FC<Props> = ({ value, onChange, height = "260px" 
     onChange(nextValue ?? "");
   };
 
-  const handleMount = (instance: editor.IStandaloneCodeEditor) => {
+  const handleMount: OnMount = (instance, monaco) => {
     instance.updateOptions({
       fontSize: 12,
       minimap: { enabled: false },
       lineNumbers: "on",
       wordWrap: "on",
     });
+    onMount?.(instance, monaco);
   };
 
   return (
@@ -37,7 +48,7 @@ export const JsonEditor: React.FC<Props> = ({ value, onChange, height = "260px" 
         theme={monacoTheme}
         value={value}
         onChange={handleChange}
-        beforeMount={defineMonacoThemes}
+        beforeMount={handleBeforeMount}
         onMount={handleMount}
         options={{
           scrollBeyondLastLine: false,

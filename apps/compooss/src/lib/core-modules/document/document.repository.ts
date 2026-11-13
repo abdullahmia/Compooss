@@ -1,13 +1,14 @@
 import { ObjectId, type Document, type Filter, type Sort, type UpdateFilter } from "mongodb";
 import { BaseRepository } from "../base.repository";
 import type {
-  AddDocumentInput,
   BulkDeleteResult,
   BulkUpdateResult,
   DeleteDocumentInput,
   DocumentRecord,
   FilterDocumentsInput,
   GetDocumentsInput,
+  InsertDocumentsInput,
+  InsertDocumentsResult,
   PaginatedResult,
   QueryDocumentsInput,
   UpdateDocumentInput,
@@ -108,17 +109,19 @@ export class DocumentRepository extends BaseRepository {
   }
 
   /**
-   * Inserts a new document into the collection.
-   * If the document omits _id, MongoDB auto-generates one.
-   * Returns the inserted document with _id set to the one used by MongoDB.
+   * Inserts documents in order, stopping at the first one that fails.
+   * Documents without an _id get one from MongoDB.
    */
-  async addDocument(input: AddDocumentInput): Promise<DocumentRecord> {
-    const { databaseName, collectionName, document } = input;
+  async insertDocuments(input: InsertDocumentsInput): Promise<InsertDocumentsResult> {
+    const { databaseName, collectionName, documents } = input;
     const col = await this.getCollection(databaseName, collectionName);
 
-    const result = await col.insertOne(document);
+    const result = await col.insertMany(documents, { ordered: true });
 
-    return { ...document, _id: result.insertedId } as DocumentRecord;
+    return {
+      insertedCount: result.insertedCount,
+      insertedIds: Object.values(result.insertedIds).map(String),
+    };
   }
 
   /**

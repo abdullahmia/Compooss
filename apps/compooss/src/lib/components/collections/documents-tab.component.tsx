@@ -27,7 +27,7 @@ import {
 import { QUERY_BAR_DEFAULT_STATE } from "@/lib/constants";
 import { Button, IconButton } from "@compooss/ui";
 import { AddDocument } from "@/lib/components/collections/add-document.component";
-import { DocumentFormModal } from "@/lib/components/collections/document-form-modal.component";
+import { EditDocumentModal } from "@/lib/components/collections/edit-document-modal.component";
 import { ExportModal } from "@/lib/components/collections/export-import/export-modal.component";
 import { ImportModal } from "@/lib/components/collections/export-import/import-modal.component";
 import { BulkDeleteModal } from "@/lib/components/collections/bulk-delete-modal.component";
@@ -220,6 +220,7 @@ export const DocumentsTab: React.FC<Props> = ({ readOnly = false }) => {
               collectionName={collectionName}
               open={addModalOpen}
               onOpenChange={setAddModalOpen}
+              fieldSuggestions={fieldSuggestions}
             />
           )}
           <div className="flex items-center ml-3">
@@ -326,10 +327,9 @@ export const DocumentsTab: React.FC<Props> = ({ readOnly = false }) => {
       </div>
 
       {!readOnly && (
-        <DocumentFormModal
+        <EditDocumentModal
           open={editingDocument !== null}
           onClose={() => setEditingDocument(null)}
-          mode="edit"
           dbName={dbName}
           collectionName={collectionName}
           documentId={editingDocument?.id}

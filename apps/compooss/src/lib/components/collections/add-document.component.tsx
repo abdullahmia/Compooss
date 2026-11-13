@@ -1,6 +1,6 @@
 "use client";
 
-import { DocumentFormModal } from "@/lib/components/collections/document-form-modal.component";
+import { InsertDocumentsModal } from "@/lib/components/collections/insert-documents/insert-documents-modal.component";
 import { Button } from "@compooss/ui";
 import { Plus } from "lucide-react";
 import { useState } from "react";
@@ -10,6 +10,8 @@ type Props = {
   collectionName: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** Dotted paths of fields seen in the collection, offered as field names. */
+  fieldSuggestions?: string[];
 };
 
 export const AddDocument: React.FC<Props> = ({
@@ -17,6 +19,7 @@ export const AddDocument: React.FC<Props> = ({
   collectionName,
   open: controlledOpen,
   onOpenChange,
+  fieldSuggestions,
 }) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen ?? internalOpen;
@@ -34,12 +37,12 @@ export const AddDocument: React.FC<Props> = ({
       >
         Add Data
       </Button>
-      <DocumentFormModal
+      <InsertDocumentsModal
         open={open}
         onClose={() => setOpen(false)}
-        mode="add"
         dbName={dbName}
         collectionName={collectionName}
+        fieldSuggestions={fieldSuggestions}
       />
     </>
   );

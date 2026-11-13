@@ -8,6 +8,7 @@ import type {
   BulkPreviewResult,
   BulkUpdateResult,
   Document,
+  InsertDocumentsResult,
   PaginatedResult,
 } from "@compooss/types";
 import { COLLECTION_QUERY_KEYS } from "@/lib/services/collections/collection-query.key";
@@ -55,24 +56,33 @@ export const useGetDocuments = (
   });
 };
 
-type AddDocumentVariables = { db: string; collection: string; payload: Record<string, unknown> };
+type InsertDocumentsVariables = {
+  db: string;
+  collection: string;
+  /** May hold Extended JSON values such as { "$oid": ... }. */
+  documents: Record<string, unknown>[];
+};
 
-export const useAddDocument = (options: TMutationOptions<unknown, AddDocumentVariables> = {}) => {
+export const useInsertDocuments = (
+  options: TMutationOptions<InsertDocumentsResult, InsertDocumentsVariables> = {},
+) => {
   const queryClient = useQueryClient();
   return useMutation({
     ...options,
-    mutationFn: async ({ db, collection, payload }: AddDocumentVariables) => {
-      const response = await apiClient.post<ApiResponse<unknown>>(
+    mutationFn: async ({ db, collection, documents }: InsertDocumentsVariables) => {
+      const response = await apiClient.post<ApiResponse<InsertDocumentsResult>>(
         ENDPOINTS.documents.all(db, collection),
-        payload,
+        { documents },
       );
       return response.data;
     },
-    onSuccess: (data, variables, context, mutation) => {
+    // A failed insert can still have inserted the documents before the bad one.
+    onSettled: (data, error, variables, context, mutation) => {
       queryClient.invalidateQueries({
         queryKey: DOCUMENTS_QUERY_KEYS.list(variables.db, variables.collection),
       });
-      options.onSuccess?.(data, variables, context, mutation);
+      queryClient.invalidateQueries({ queryKey: COLLECTION_QUERY_KEYS.list(variables.db) });
+      options.onSettled?.(data, error, variables, context, mutation);
     },
   });
 };
