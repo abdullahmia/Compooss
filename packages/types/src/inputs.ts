@@ -49,10 +49,10 @@ export interface QueryDocumentsInput {
   limit: number;
 }
 
-export interface AddDocumentInput {
+export interface InsertDocumentsInput {
   databaseName: string;
   collectionName: string;
-  document: DocumentRecord;
+  documents: DocumentRecord[];
 }
 
 export interface UpdateDocumentInput {

@@ -12,7 +12,7 @@ import {
   parseDocumentFilterStrict,
   parseJsonParam,
 } from "@/lib/utils/query-filter.util";
-import { BSON, type Document } from "mongodb";
+import { BSON, MongoBulkWriteError, type Document } from "mongodb";
 import { NextResponse, type NextRequest } from "next/server";
 
 type DocParams = { params: Promise<{ dbName: string; colName: string }> };
@@ -44,26 +44,50 @@ export async function GET(req: NextRequest, { params }: DocParams) {
   return NextResponse.json(createApiResponse(result, "Documents fetched successfully", 200));
 }
 
+/**
+ * Accepts one document or an array of them. Extended JSON values such as
+ * { "$oid": ... } or { "$date": ... } become real BSON types.
+ */
+function parseInsertDocuments(raw: unknown): Document[] {
+  const documents = Array.isArray(raw) ? raw : [raw];
+  if (documents.length === 0) {
+    throw new Error("Provide at least one document.");
+  }
+  if (documents.some((doc) => !doc || typeof doc !== "object" || Array.isArray(doc))) {
+    throw new Error("Each document must be a JSON object.");
+  }
+  // Canonical mode keeps { "$numberLong": ... } a 64-bit integer; relaxed mode
+  // turns it into a JS number and loses precision past 2^53.
+  return BSON.EJSON.deserialize(documents, { relaxed: false }) as Document[];
+}
+
+/** Body: { documents: [...] }, or a bare document or array. */
 export async function POST(req: Request, { params }: DocParams) {
+  let total = 0;
   try {
     const { dbName, colName } = await params;
     if (isProtectedDatabase(dbName)) return protectedDbResponse();
     if (await isReadOnlySession()) return readOnlyResponse();
     const body = await req.json();
-    const document = body?.document ?? body;
-    const inserted = await documentRepository.addDocument({
+    const documents = parseInsertDocuments(body?.documents ?? body);
+    total = documents.length;
+    const result = await documentRepository.insertDocuments({
       databaseName: dbName,
       collectionName: colName,
-      document: document ?? {},
+      documents,
     });
-    return NextResponse.json(createApiResponse(inserted, "Document inserted successfully", 201));
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : String(error);
+    const noun = result.insertedCount === 1 ? "document" : "documents";
     return NextResponse.json(
-      createApiResponse(null, message, 400),
-      { status: 400 },
+      createApiResponse(result, `Inserted ${result.insertedCount} ${noun}`, 201),
     );
+  } catch (error) {
+    // Inserts are ordered, so the ones before the failing document are kept.
+    if (error instanceof MongoBulkWriteError && total > 1) {
+      return badRequest(
+        `Inserted ${error.insertedCount} of ${total} documents, then: ${extractErrorMessage(error)}`,
+      );
+    }
+    return badRequest(error);
   }
 }
 
