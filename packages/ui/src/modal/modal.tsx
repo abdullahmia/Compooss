@@ -1,6 +1,9 @@
+"use client";
+
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
-import { forwardRef, type HTMLAttributes, type ReactNode } from "react";
+import { forwardRef, useState, type HTMLAttributes, type ReactNode } from "react";
+import { usePresence } from "../lib/use-presence";
 import { cn } from "../lib/utils";
 
 export interface ModalOverlayProps extends HTMLAttributes<HTMLDivElement> {
@@ -12,7 +15,7 @@ const ModalOverlay = forwardRef<HTMLDivElement, ModalOverlayProps>(
     <div
       ref={ref}
       className={cn(
-        "absolute inset-0 bg-background/10 backdrop-blur-xs",
+        "absolute inset-0 bg-background/10 backdrop-blur-xs group-data-[state=open]/modal:animate-overlay-in group-data-[state=closed]/modal:animate-overlay-out",
         className
       )}
       onClick={onClose}
@@ -23,7 +26,7 @@ const ModalOverlay = forwardRef<HTMLDivElement, ModalOverlayProps>(
 ModalOverlay.displayName = "ModalOverlay";
 
 const modalContentVariants = cva(
-  "relative bg-card border border-border rounded-lg shadow-xl mx-4",
+  "relative bg-card border border-border rounded-lg shadow-xl mx-4 group-data-[state=open]/modal:animate-modal-in group-data-[state=closed]/modal:animate-modal-out",
   {
     variants: {
       size: {
@@ -118,13 +121,25 @@ export interface ModalProps {
   children: ReactNode;
 }
 
+/** How long a closed modal stays mounted: its exit animation plus a frame. */
+const EXIT_MS = 150;
+
 function Modal({ open, onClose, children }: ModalProps) {
-  if (!open) return null;
+  const mounted = usePresence(open, EXIT_MS);
+  // While closing, keep showing what was there. Parents often clear the data
+  // they render (the item being edited, say) in the same update that closes it.
+  const [shownChildren, setShownChildren] = useState(children);
+  if (open && shownChildren !== children) setShownChildren(children);
+
+  if (!mounted) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div
+      data-state={open ? "open" : "closed"}
+      className="group/modal fixed inset-0 z-50 flex items-center justify-center data-[state=closed]:pointer-events-none"
+    >
       <ModalOverlay onClose={onClose} />
-      {children}
+      {open ? children : shownChildren}
     </div>
   );
 }
@@ -134,4 +149,3 @@ Modal.displayName = "Modal";
 export {
   Modal, ModalBody, ModalContent, modalContentVariants, ModalFooter, ModalHeader, ModalOverlay
 };
-

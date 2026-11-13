@@ -102,7 +102,7 @@ export const ShellPanel: React.FC = () => {
   return (
     <div
       ref={panelRef}
-      className="border-t border-border flex flex-col bg-[#1e1e1e] shrink-0"
+      className="border-t border-border flex flex-col bg-[#1e1e1e] shrink-0 animate-panel-in"
       style={{ height: panelHeight }}
     >
       {/* Drag handle */}

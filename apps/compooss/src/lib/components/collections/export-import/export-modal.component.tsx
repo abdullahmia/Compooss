@@ -10,7 +10,7 @@ import {
 } from "@compooss/ui";
 import { useExportCollection } from "@/lib/services/export/export.service";
 import type { ExportFormat, JsonExportMode } from "@compooss/types";
-import { ChevronDown, ChevronRight, Download, FileJson, FileText } from "lucide-react";
+import { ChevronRight, Download, FileJson, FileText } from "lucide-react";
 import { useState } from "react";
 
 type Props = {
@@ -134,11 +134,9 @@ export const ExportModal: React.FC<Props> = ({
                 onClick={() => setAdvancedOpen((v) => !v)}
                 className="flex items-center gap-1.5 text-xs font-medium text-foreground hover:text-primary transition-colors w-full text-left"
               >
-                {advancedOpen ? (
-                  <ChevronDown className="h-3.5 w-3.5 shrink-0" />
-                ) : (
-                  <ChevronRight className="h-3.5 w-3.5 shrink-0" />
-                )}
+                <ChevronRight
+                  className={`h-3.5 w-3.5 shrink-0 transition-transform duration-150 ${advancedOpen ? "rotate-90" : ""}`}
+                />
                 Advanced JSON Format
                 {!advancedOpen && (
                   <span className="ml-1 text-muted-foreground font-normal">— {selectedModeLabel}</span>
@@ -146,7 +144,7 @@ export const ExportModal: React.FC<Props> = ({
               </button>
 
               {advancedOpen && (
-                <div className="mt-2 space-y-2">
+                <div className="mt-2 space-y-2 animate-reveal">
                   {JSON_MODE_OPTIONS.map((opt) => (
                     <label
                       key={opt.value}

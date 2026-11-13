@@ -5,7 +5,6 @@ import { IconButton, Badge } from "@compooss/ui";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  ChevronDown,
   ChevronRight,
   Copy,
   Eye,
@@ -162,11 +161,9 @@ export const StageCard: React.FC<Props> = ({
             variant="default"
             size="sm"
             icon={
-              stage.collapsed ? (
-                <ChevronRight className="h-3.5 w-3.5" />
-              ) : (
-                <ChevronDown className="h-3.5 w-3.5" />
-              )
+              <ChevronRight
+                className={`h-3.5 w-3.5 transition-transform duration-150 ${stage.collapsed ? "" : "rotate-90"}`}
+              />
             }
             label={stage.collapsed ? "Expand" : "Collapse"}
             onClick={handleToggleCollapse}
@@ -181,7 +178,7 @@ export const StageCard: React.FC<Props> = ({
       )}
 
       {!stage.collapsed && (
-        <div className="px-3 pb-3">
+        <div className="px-3 pb-3 animate-reveal">
           <StageEditor
             value={stage.value}
             onChange={handleValueChange}

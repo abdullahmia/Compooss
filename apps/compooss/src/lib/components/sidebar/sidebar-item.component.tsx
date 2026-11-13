@@ -13,7 +13,6 @@ import {
 } from "@/lib/services/collections/collection.service";
 import type { Collection, Database } from "@compooss/types";
 import {
-  ChevronDown,
   ChevronRight,
   DatabaseBackupIcon,
   Pencil,
@@ -129,11 +128,9 @@ export const SidebarItem: React.FC<Props> = ({
         >
           <IconButton
             icon={
-              expanded ? (
-                <ChevronDown className="h-3.5 w-3.5" />
-              ) : (
-                <ChevronRight className="h-3.5 w-3.5" />
-              )
+              <ChevronRight
+                className={`h-3.5 w-3.5 transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
+              />
             }
             label={expanded ? "Collapse" : "Expand"}
             variant="ghost"
@@ -176,7 +173,7 @@ export const SidebarItem: React.FC<Props> = ({
         </div>
 
         {expanded && (
-          <div className="ml-4">
+          <div className="ml-4 animate-reveal">
             {isLoadingCollections && <SidebarCollectionSkeleton />}
             {!isLoadingCollections && collections?.map((col) => (
               <div

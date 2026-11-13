@@ -10,6 +10,7 @@ import type {
   ConnectionTestResult,
   SavedConnection,
 } from "@compooss/types";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   createContext,
   useCallback,
@@ -84,6 +85,7 @@ export function ConnectionProvider({
   const [maskedUri, setMaskedUri] = useState<string | null>(null);
   const activeConnectionRef = useRef<SavedConnection | null>(null);
   const hasChecked = useRef(false);
+  const queryClient = useQueryClient();
 
   const checkStatus = useCallback(async () => {
     try {
@@ -142,13 +144,16 @@ export function ConnectionProvider({
       setIsReadOnly(status?.readOnly ?? false);
       setActiveConnection(connection);
       localStorage.setItem(ACTIVE_CONNECTION_KEY, connection.id);
+      // Cached databases, collections and documents belong to the previous
+      // server. Resetting shows loading states instead of its data.
+      queryClient.resetQueries();
 
       await connectionDB.markUsed(connection.id);
       return status;
     } finally {
       setIsConnecting(false);
     }
-  }, []);
+  }, [queryClient]);
 
   const disconnect = useCallback(async () => {
     try {
