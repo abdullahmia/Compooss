@@ -88,15 +88,17 @@ class ConnectionManager {
     options?: MongoClientOptions,
     readOnly = false,
   ): Promise<ConnectionStatus> {
-    await this.disconnect(sessionId);
-
+    // Open the new connection before closing the old one, so a failed switch
+    // leaves the browser on the connection it had.
     const { driver, uri: connectedUri } = await this.openDriver(uri, options);
+    const previous = this.sessions.get(sessionId);
     this.sessions.set(sessionId, {
       driver,
       uri: connectedUri,
       readOnly,
       lastUsedAt: Date.now(),
     });
+    await previous?.driver.disconnect().catch(() => {});
 
     const serverInfo = await driver.getServerInfo();
     return {
