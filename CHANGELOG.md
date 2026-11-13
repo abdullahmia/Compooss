@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.25.0](https://github.com/abdullahmia/Compooss/compare/v1.24.0...v1.25.0) (2026-11-13)
+
+
+### Features
+
+* **databases:** export and import whole databases ([bf62443](https://github.com/abdullahmia/Compooss/commit/bf624439da1ffa8dbdf58550b55173602e4b0a5f))
+* **databases:** export and import whole databases ([7df816b](https://github.com/abdullahmia/Compooss/commit/7df816b6cdc8f9dbc3e428d1906b0dcf40ca70a9))
+* **databases:** improve the create database flow ([85594b5](https://github.com/abdullahmia/Compooss/commit/85594b5fa64e22ecf1780ad81d37f0d336f81bd8))
+* **desktop:** update the app from inside it ([7c7301b](https://github.com/abdullahmia/Compooss/commit/7c7301b311e972a508a32fb75bea18559e71660b))
+* **desktop:** update the app from inside it ([520e081](https://github.com/abdullahmia/Compooss/commit/520e081a778b5a2bbcd06e82f320847cdb5dc8ba))
+* **docs:** draw the Compooss leaf in JSON characters in the hero ([78f3dd2](https://github.com/abdullahmia/Compooss/commit/78f3dd2dfac9c327a4404b0ba39a8ab844bd0507))
+* **docs:** redesign the landing page ([a447dda](https://github.com/abdullahmia/Compooss/commit/a447dda6b0ce0eb95ff887909e5f14ecb5db8620))
+* **documents:** redesign the insert documents modal ([d55bfa2](https://github.com/abdullahmia/Compooss/commit/d55bfa22bced74ee806bbb33d6a8690a4332654f))
+* **documents:** redesign the insert documents modal ([f6fb995](https://github.com/abdullahmia/Compooss/commit/f6fb9957655fe576feb03ed03ce554148bba38ac))
+* **workspace:** link the logo to databases and redesign disconnect ([507549b](https://github.com/abdullahmia/Compooss/commit/507549b516feb9068a31dba2870f70f0d9b131dd))
+
+
+### Bug Fixes
+
+* **theme:** keep the circular reveal when switching to dark ([7e200b1](https://github.com/abdullahmia/Compooss/commit/7e200b1951cfcc6222a7b68791cd2c8fbca02bba))
+
 ## [1.24.0](https://github.com/abdullahmia/Compooss/compare/v1.23.0...v1.24.0) (2026-11-09)
 
 
