@@ -11,14 +11,16 @@ type ViewTransition = {
 
 export const ThemeSwitcher: React.FC = () => {
   const [mounted, setMounted] = useState(false);
-  const { theme, setTheme } = useTheme();
+  // resolvedTheme, not theme: with "System" chosen in Settings, theme is "system".
+  const { resolvedTheme, setTheme } = useTheme();
 
   useEffect(() => setMounted(true), []);
 
   if (!mounted) return <div className="w-8 h-8" />;
 
   const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const newTheme = theme === "dark" ? "light" : "dark";
+    const isDarkToLight = resolvedTheme === "dark";
+    const newTheme = isDarkToLight ? "light" : "dark";
 
     if (!("startViewTransition" in document)) {
       setTheme(newTheme);
@@ -32,8 +34,6 @@ export const ThemeSwitcher: React.FC = () => {
       Math.max(y, window.innerHeight - y)
     );
 
-    const isDarkToLight = theme === "dark";
-
     if (isDarkToLight) {
       document.documentElement.dataset.themeTransition = "dark-to-light";
     } else {
@@ -46,42 +46,35 @@ export const ThemeSwitcher: React.FC = () => {
       }
     ).startViewTransition(() => setTheme(newTheme));
 
+    const circles = [
+      `circle(0px at ${x}px ${y}px)`,
+      `circle(${maxRadius}px at ${x}px ${y}px)`,
+    ];
+
+    transition.ready
+      .then(() => {
+        // Dark → light shrinks the old dark snapshot; light → dark grows the new one.
+        const animation = document.documentElement.animate(
+          { clipPath: isDarkToLight ? [...circles].reverse() : circles },
+          {
+            duration: 480,
+            easing: "ease-in-out",
+            fill: "forwards",
+            pseudoElement: isDarkToLight
+              ? "::view-transition-old(root)"
+              : "::view-transition-new(root)",
+          }
+        );
+        // fill: "forwards" holds the last frame until the transition ends. Left
+        // running, it would keep clipping that pseudo-element in the next toggle:
+        // a finished dark → light run hid the light snapshot of light → dark.
+        transition.finished.then(() => animation.cancel());
+      })
+      // Rejects when the transition is skipped, e.g. by a second click mid-way.
+      .catch(() => {});
+
     transition.finished.then(() => {
       delete document.documentElement.dataset.themeTransition;
-    });
-
-    transition.ready.then(() => {
-      if (isDarkToLight) {
-        document.documentElement.animate(
-          {
-            clipPath: [
-              `circle(${maxRadius}px at ${x}px ${y}px)`,
-              `circle(0px at ${x}px ${y}px)`,
-            ],
-          },
-          {
-            duration: 480,
-            easing: "ease-in-out",
-            fill: "forwards",
-            pseudoElement: "::view-transition-old(root)",
-          }
-        );
-      } else {
-        document.documentElement.animate(
-          {
-            clipPath: [
-              `circle(0px at ${x}px ${y}px)`,
-              `circle(${maxRadius}px at ${x}px ${y}px)`,
-            ],
-          },
-          {
-            duration: 480,
-            easing: "ease-in-out",
-            fill: "forwards",
-            pseudoElement: "::view-transition-new(root)",
-          }
-        );
-      }
     });
   };
 
@@ -91,7 +84,7 @@ export const ThemeSwitcher: React.FC = () => {
       className="w-8 h-8 flex items-center justify-center rounded-md cursor-pointer hover:bg-secondary transition-colors text-foreground"
       aria-label="Toggle theme"
     >
-      {theme === "dark" ? (
+      {resolvedTheme === "dark" ? (
         <Sun className="h-4 w-4" />
       ) : (
         <Moon className="h-4 w-4" />

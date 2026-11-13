@@ -11,8 +11,10 @@ import { ConnectionProvider } from "./connection-provider";
 import { ShellProvider } from "./shell-provider";
 
 export const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
+  // disableTransitionOnChange: otherwise every transition-colors element fades to
+  // the new theme, which smears the circular reveal in the theme switcher.
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
         <ConnectionProvider>
           <ShellProvider>{children}</ShellProvider>

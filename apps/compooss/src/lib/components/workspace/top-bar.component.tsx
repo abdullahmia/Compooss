@@ -4,8 +4,9 @@ import { useConnection } from "@/lib/providers/connection-provider";
 import { useShellPanel } from "@/lib/providers/shell-provider";
 import { ThemeSwitcher } from "@/lib/components/common/theme-switcher.component";
 import { SettingsModal } from "@/lib/components/settings/settings-modal.component";
+import { DisconnectModal } from "@/lib/components/workspace/disconnect-modal.component";
 import { useAuthSession, useLogout } from "@/lib/services/auth/auth.service";
-import { Badge, Button, ConfirmDestructiveModal, IconButton } from "@compooss/ui";
+import { Badge, Button, IconButton } from "@compooss/ui";
 import {
   Activity,
   Database,
@@ -17,6 +18,7 @@ import {
   TerminalSquare,
   UserRound,
 } from "lucide-react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -29,10 +31,9 @@ const isMac = typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigat
 
 export const TopBar: React.FC<Props> = ({ onOpenCommandPalette }) => {
   const [disconnectOpen, setDisconnectOpen] = useState(false);
-  const [isDisconnecting, setIsDisconnecting] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const { isOpen: isShellOpen, toggle: toggleShell } = useShellPanel();
-  const { activeConnection, maskedUri, isReadOnly, disconnect } = useConnection();
+  const { activeConnection, maskedUri, isReadOnly } = useConnection();
   const { data: auth } = useAuthSession();
   const { mutate: logout, isPending: isLoggingOut } = useLogout({
     onSuccess: () => window.location.assign("/login"),
@@ -41,22 +42,19 @@ export const TopBar: React.FC<Props> = ({ onOpenCommandPalette }) => {
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleDisconnect = async () => {
-    setIsDisconnecting(true);
-    await disconnect();
-    setIsDisconnecting(false);
-    setDisconnectOpen(false);
-    toast.success("Disconnected");
-    router.push("/connect");
-  };
-
   return (
     <>
       <div className="h-11 flex items-center gap-2 px-3 bg-topbar border-b border-border shrink-0">
-        <Leaf className="h-5 w-5 text-primary" />
-        <span className="font-semibold text-sm text-foreground tracking-tight">
-          Compooss
-        </span>
+        <Link
+          href="/databases"
+          title="Databases"
+          className="flex items-center gap-2 rounded-sm transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary/50"
+        >
+          <Leaf className="h-5 w-5 text-primary" />
+          <span className="font-semibold text-sm text-foreground tracking-tight">
+            Compooss
+          </span>
+        </Link>
 
         <div className="flex-1 mx-4">
           <div className="flex items-center gap-2 bg-secondary rounded-sm px-3 py-1.5 max-w-2xl hover:bg-secondary/80 transition-colors">
@@ -104,21 +102,6 @@ export const TopBar: React.FC<Props> = ({ onOpenCommandPalette }) => {
           label="Performance"
           onClick={() => router.push("/performance")}
         />
-        <ThemeSwitcher />
-        <IconButton
-          variant="ghost"
-          icon={<Settings className="h-4 w-4" />}
-          label="Settings"
-          onClick={() => setSettingsOpen(true)}
-        />
-        <Button
-          variant="outline"
-          size="sm"
-          icon={<LogOut className="h-3.5 w-3.5" />}
-          onClick={() => setDisconnectOpen(true)}
-        >
-          Disconnect
-        </Button>
         <IconButton
           variant="default"
           icon={
@@ -129,9 +112,16 @@ export const TopBar: React.FC<Props> = ({ onOpenCommandPalette }) => {
           label="MongoDB Shell"
           onClick={toggleShell}
         />
+        <ThemeSwitcher />
+        <IconButton
+          variant="ghost"
+          icon={<Settings className="h-4 w-4" />}
+          label="Settings"
+          onClick={() => setSettingsOpen(true)}
+        />
+        <div className="h-5 w-px bg-border mx-1" />
         {auth?.enabled && (
           <>
-            <div className="h-5 w-px bg-border mx-1" />
             <span className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground">
               <UserRound className="h-3.5 w-3.5" />
               {auth.username}
@@ -146,19 +136,18 @@ export const TopBar: React.FC<Props> = ({ onOpenCommandPalette }) => {
             </Button>
           </>
         )}
+        <Button
+          variant="outline"
+          size="sm"
+          icon={<LogOut className="h-3.5 w-3.5" />}
+          onClick={() => setDisconnectOpen(true)}
+        >
+          Disconnect
+        </Button>
       </div>
 
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      <ConfirmDestructiveModal
-        open={disconnectOpen}
-        onClose={() => setDisconnectOpen(false)}
-        title="Disconnect"
-        icon={<LogOut className="h-5 w-5" />}
-        description="Are you sure you want to disconnect from this database? Any unsaved changes will be lost."
-        confirmLabel="Disconnect"
-        isPending={isDisconnecting}
-        onConfirm={handleDisconnect}
-      />
+      <DisconnectModal open={disconnectOpen} onClose={() => setDisconnectOpen(false)} />
     </>
   );
 };
