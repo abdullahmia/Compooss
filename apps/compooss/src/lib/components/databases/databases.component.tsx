@@ -5,15 +5,17 @@ import { useGetDatabases } from "@/lib/services/database/database.service";
 import type { Database } from "@compooss/types";
 import { isProtectedDatabase } from "@compooss/types";
 import { Button, DatabasesListSkeleton, EmptyState } from "@compooss/ui";
-import { AlertTriangle, DatabaseBackupIcon, Plus, RefreshCw } from "lucide-react";
+import { AlertTriangle, DatabaseBackupIcon, Plus, RefreshCw, Upload } from "lucide-react";
 import { useMemo, useState } from "react";
 import { CreateDatabaseModal } from "./create-database-modal.component";
+import { ImportDatabaseModal } from "./export-import/import-database-modal.component";
 import { DatabaseCard } from "./database-card.component";
 
 export const Databases: React.FC = () => {
   const { data: databases = [], isLoading, isError, error, refetch, isRefetching } = useGetDatabases();
   const { isReadOnly } = useConnection();
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   const { userDatabases, systemDatabases } = useMemo(() => {
     const user: Database[] = [];
@@ -39,13 +41,23 @@ export const Databases: React.FC = () => {
               </p>
             </div>
             {!isReadOnly && (
-              <Button
-                variant="primary"
-                icon={<Plus className="h-3.5 w-3.5" />}
-                onClick={() => setCreateModalOpen(true)}
-              >
-                Create database
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<Upload className="h-3.5 w-3.5" />}
+                  onClick={() => setImportModalOpen(true)}
+                >
+                  Import database
+                </Button>
+                <Button
+                  variant="primary"
+                  icon={<Plus className="h-3.5 w-3.5" />}
+                  onClick={() => setCreateModalOpen(true)}
+                >
+                  Create database
+                </Button>
+              </div>
             )}
           </div>
         </div>
@@ -136,6 +148,7 @@ export const Databases: React.FC = () => {
       {createModalOpen && (
         <CreateDatabaseModal onClose={() => setCreateModalOpen(false)} />
       )}
+      <ImportDatabaseModal open={importModalOpen} onClose={() => setImportModalOpen(false)} />
     </>
   );
 };
