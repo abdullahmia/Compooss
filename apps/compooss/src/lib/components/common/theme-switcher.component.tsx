@@ -22,7 +22,8 @@ export const ThemeSwitcher: React.FC = () => {
     const isDarkToLight = resolvedTheme === "dark";
     const newTheme = isDarkToLight ? "light" : "dark";
 
-    if (!("startViewTransition" in document)) {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!("startViewTransition" in document) || reduceMotion) {
       setTheme(newTheme);
       return;
     }

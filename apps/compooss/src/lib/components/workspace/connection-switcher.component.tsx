@@ -157,7 +157,7 @@ export const ConnectionSwitcher: React.FC = () => {
               triggerRef.current?.focus();
             }
           }}
-          className="absolute left-0 top-full z-50 mt-1 w-full min-w-[22rem] overflow-hidden rounded-lg border border-border bg-popover shadow-2xl"
+          className="absolute left-0 top-full z-50 mt-1 w-full min-w-[22rem] origin-top overflow-hidden rounded-lg border border-border bg-popover shadow-2xl animate-popover-in"
         >
           <Command label="Saved connections" loop>
             <div className="flex items-center gap-2 border-b border-border px-3">

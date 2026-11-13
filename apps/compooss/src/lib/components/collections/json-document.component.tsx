@@ -7,7 +7,6 @@ import {
 } from "@/lib/services/documents/documents.service";
 import { getDocumentId } from "@/lib/utils";
 import {
-  ChevronDown,
   ChevronRight,
   Copy,
   CopyPlus,
@@ -108,13 +107,14 @@ function ExpandButton({
   label: string;
   onClick: () => void;
 }) {
-  const Chevron = expanded ? ChevronDown : ChevronRight;
   return (
     <button
       onClick={onClick}
       className="inline-flex items-baseline text-muted-foreground hover:text-foreground"
     >
-      <Chevron className="h-3 w-3 self-center" />
+      <ChevronRight
+        className={`h-3 w-3 self-center transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
+      />
       <span className="text-xs font-mono ml-0.5">{label}</span>
     </button>
   );
@@ -153,7 +153,7 @@ function JsonValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
           onClick={() => setExpanded(!expanded)}
         />
         {expanded && (
-          <div className="ml-4 border-l border-border/50 pl-3 py-0.5">
+          <div className="ml-4 border-l border-border/50 pl-3 py-0.5 animate-reveal">
             <FieldGrid
               fields={value.map((item, i) => [String(i), item])}
               keyClassName="text-json-number"
@@ -250,7 +250,7 @@ function JsonValue({ value, depth = 0 }: { value: unknown; depth?: number }) {
           onClick={() => setExpanded(!expanded)}
         />
         {expanded && (
-          <div className="ml-4 border-l border-border/50 pl-3 py-0.5">
+          <div className="ml-4 border-l border-border/50 pl-3 py-0.5 animate-reveal">
             <FieldGrid fields={keys.map((key) => [key, obj[key]])} depth={depth + 1} />
           </div>
         )}
@@ -316,11 +316,9 @@ export const JsonDocument: React.FC<Props> = ({
           variant="ghost"
           size="sm"
           icon={
-            expanded ? (
-              <ChevronDown className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronRight className="h-3.5 w-3.5" />
-            )
+            <ChevronRight
+              className={`h-3.5 w-3.5 transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
+            />
           }
           label={expanded ? "Collapse" : "Expand"}
           className="ml-1"

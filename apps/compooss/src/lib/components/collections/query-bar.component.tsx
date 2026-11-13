@@ -283,7 +283,7 @@ export const QueryBar: React.FC<Props> = ({
             placeholder='{ "field": "value" }'
           />
           {showSuggestions && suggestionContext === "filter" && suggestions.length > 0 && (
-            <div className="absolute top-full left-0 mt-1 w-64 bg-card border border-border rounded-sm shadow-lg z-50 py-1 max-h-48 overflow-y-auto scrollbar-thin">
+            <div className="absolute top-full left-0 mt-1 w-64 bg-card border border-border rounded-sm shadow-lg z-50 py-1 max-h-48 overflow-y-auto scrollbar-thin origin-top-left animate-popover-in">
               {suggestions.map((field, i) => (
                 <button
                   key={field}
@@ -331,7 +331,7 @@ export const QueryBar: React.FC<Props> = ({
             onClick={() => setHistoryOpen((open) => !open)}
           />
           {historyOpen && (
-            <div className="absolute right-0 top-full mt-1 z-50">
+            <div className="absolute right-0 top-full mt-1 z-50 origin-top-right animate-popover-in">
               <QueryHistoryPanel
                 savedQueries={savedQueries}
                 history={history}
@@ -358,7 +358,7 @@ export const QueryBar: React.FC<Props> = ({
       </div>
 
       {showOptions && (
-        <div className="flex flex-wrap items-center gap-4 px-4 py-2 border-t border-border text-xs">
+        <div className="flex flex-wrap items-center gap-4 px-4 py-2 border-t border-border text-xs animate-reveal">
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground shrink-0">Project:</span>
             <div className="relative">
@@ -382,7 +382,7 @@ export const QueryBar: React.FC<Props> = ({
                 placeholder="{ }"
               />
               {showSuggestions && suggestionContext === "project" && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 mt-1 w-56 bg-card border border-border rounded-sm shadow-lg z-50 py-1 max-h-40 overflow-y-auto">
+                <div className="absolute top-full left-0 mt-1 w-56 bg-card border border-border rounded-sm shadow-lg z-50 py-1 max-h-40 overflow-y-auto origin-top-left animate-popover-in">
                   {suggestions.map((field, i) => (
                     <button
                       key={field}
@@ -423,7 +423,7 @@ export const QueryBar: React.FC<Props> = ({
                 placeholder="{ }"
               />
               {showSuggestions && suggestionContext === "sort" && suggestions.length > 0 && (
-                <div className="absolute top-full left-0 mt-1 w-56 bg-card border border-border rounded-sm shadow-lg z-50 py-1 max-h-40 overflow-y-auto">
+                <div className="absolute top-full left-0 mt-1 w-56 bg-card border border-border rounded-sm shadow-lg z-50 py-1 max-h-40 overflow-y-auto origin-top-left animate-popover-in">
                   {suggestions.map((field, i) => (
                     <button
                       key={field}

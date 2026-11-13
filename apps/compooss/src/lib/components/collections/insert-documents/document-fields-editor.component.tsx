@@ -19,7 +19,6 @@ import {
 } from "@/lib/components/collections/insert-documents/document-draft";
 import { Button, cn, IconButton, Toggle } from "@compooss/ui";
 import {
-  ChevronDown,
   ChevronRight,
   Clock,
   CopyPlus,
@@ -177,7 +176,6 @@ function FieldValue({
 
   if (isContainerType(field.type)) {
     const expanded = !editor.isCollapsed(field.id);
-    const Chevron = expanded ? ChevronDown : ChevronRight;
     const count = field.children.filter((child) => !isBlankField(child)).length;
     return (
       <button
@@ -186,7 +184,7 @@ function FieldValue({
         aria-expanded={expanded}
         className="flex h-7 items-center gap-1 rounded-sm px-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
       >
-        <Chevron className="h-3 w-3" />
+        <ChevronRight className={cn("h-3 w-3 transition-transform duration-150", expanded && "rotate-90")} />
         {field.type === "Object" ? countLabel(count, "field") : countLabel(count, "item")}
       </button>
     );
@@ -326,7 +324,7 @@ function FieldRow({
         />
       </div>
       {expanded && (
-        <div className="ml-3 mt-1 border-l border-border/60 pl-3">
+        <div className="ml-3 mt-1 border-l border-border/60 pl-3 animate-reveal">
           <FieldList
             fields={field.children}
             path={childPath}

@@ -186,7 +186,7 @@ export const PipelineToolbar: React.FC<Props> = ({
                 className="fixed inset-0 z-40"
                 onClick={() => setShowExportMenu(false)}
               />
-              <div className="absolute right-0 top-full mt-1 z-50 w-[220px] rounded-lg border border-border bg-card shadow-xl overflow-hidden">
+              <div className="absolute right-0 top-full mt-1 z-50 w-[220px] rounded-lg border border-border bg-card shadow-xl overflow-hidden origin-top-right animate-popover-in">
                 <Button
                   variant="menu"
                   icon={<ClipboardCopy className="h-3.5 w-3.5 text-muted-foreground" />}

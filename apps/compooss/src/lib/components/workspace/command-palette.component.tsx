@@ -21,6 +21,7 @@ import {
 } from "@/lib/utils/collection-path.util";
 import { isProtectedDatabase } from "@compooss/types";
 import { useQueries } from "@tanstack/react-query";
+import { usePresence } from "@compooss/ui";
 import { Command } from "cmdk";
 import {
   Activity,
@@ -92,6 +93,8 @@ export const CommandPalette: React.FC<Props> = ({ open, onOpenChange }) => {
   const closeAllTabs = useCloseAllWorkspaceTabs();
   const [createDbOpen, setCreateDbOpen] = useState(false);
   const [createCollectionIn, setCreateCollectionIn] = useState<string | null>(null);
+  // Stays mounted briefly after closing so it can animate out.
+  const mounted = usePresence(open, 150);
 
   // ⌘K / Ctrl+K toggles the palette anywhere. Captured before the editors,
   // which would otherwise treat it as the start of a key chord.
@@ -149,9 +152,15 @@ export const CommandPalette: React.FC<Props> = ({ open, onOpenChange }) => {
 
   return (
     <>
-      {open && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4">
-          <div className="absolute inset-0 bg-background/40 backdrop-blur-sm" onClick={close} />
+      {mounted && (
+        <div
+          data-state={open ? "open" : "closed"}
+          className="group/palette fixed inset-0 z-50 flex items-start justify-center pt-[12vh] px-4 data-[state=closed]:pointer-events-none"
+        >
+          <div
+            className="absolute inset-0 bg-background/40 backdrop-blur-sm group-data-[state=open]/palette:animate-overlay-in group-data-[state=closed]/palette:animate-overlay-out"
+            onClick={close}
+          />
           <div
             role="dialog"
             aria-modal="true"
@@ -162,7 +171,7 @@ export const CommandPalette: React.FC<Props> = ({ open, onOpenChange }) => {
                 close();
               }
             }}
-            className="relative w-full max-w-xl rounded-lg border border-border bg-popover shadow-2xl overflow-hidden"
+            className="relative w-full max-w-xl rounded-lg border border-border bg-popover shadow-2xl overflow-hidden group-data-[state=open]/palette:animate-palette-in group-data-[state=closed]/palette:animate-modal-out"
           >
             <Command label="Command palette" loop filter={filterItem}>
               <div className="flex items-center gap-2 px-3 border-b border-border">
