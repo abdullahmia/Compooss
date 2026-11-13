@@ -2,11 +2,13 @@
 
 import { Button, CollectionsSkeleton } from "@compooss/ui";
 import { CreateCollectionModal } from "@/lib/components/collections/create-collection-modal.component";
+import { ExportDatabaseModal } from "@/lib/components/databases/export-import/export-database-modal.component";
+import { ImportDatabaseModal } from "@/lib/components/databases/export-import/import-database-modal.component";
 import { useConnection } from "@/lib/providers/connection-provider";
 import { useGetCollections } from "@/lib/services/collections/collection.service";
 import { formatBytes } from "@/lib/utils";
 import { isProtectedDatabase, type Collection } from "@compooss/types";
-import { DatabaseBackupIcon, Plus, Table } from "lucide-react";
+import { DatabaseBackupIcon, Download, Plus, Table, Upload } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -17,6 +19,7 @@ type Props = {
 export const DatabaseView: React.FC<Props> = ({ dbName }) => {
   const { data: collections, isLoading } = useGetCollections(dbName);
   const [addCollectionModalOpen, setAddCollectionModalOpen] = useState(false);
+  const [transferModal, setTransferModal] = useState<"export" | "import" | null>(null);
   const { isReadOnly } = useConnection();
   const readOnly = isReadOnly || isProtectedDatabase(dbName);
 
@@ -36,6 +39,27 @@ export const DatabaseView: React.FC<Props> = ({ dbName }) => {
               </span>
             </div>
             <div className="flex items-center gap-2">
+              {!isProtectedDatabase(dbName) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<Download className="h-3.5 w-3.5" />}
+                  onClick={() => setTransferModal("export")}
+                  disabled={!collections?.length}
+                >
+                  Export
+                </Button>
+              )}
+              {!readOnly && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={<Upload className="h-3.5 w-3.5" />}
+                  onClick={() => setTransferModal("import")}
+                >
+                  Import
+                </Button>
+              )}
               {!readOnly && (
                 <Button
                   variant="primary"
@@ -136,6 +160,16 @@ export const DatabaseView: React.FC<Props> = ({ dbName }) => {
         open={addCollectionModalOpen}
         dbName={dbName}
         onClose={() => setAddCollectionModalOpen(false)}
+      />
+      <ExportDatabaseModal
+        open={transferModal === "export"}
+        dbName={dbName}
+        onClose={() => setTransferModal(null)}
+      />
+      <ImportDatabaseModal
+        open={transferModal === "import"}
+        targetDatabase={dbName}
+        onClose={() => setTransferModal(null)}
       />
     </>
   );

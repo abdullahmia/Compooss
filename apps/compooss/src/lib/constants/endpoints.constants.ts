@@ -13,6 +13,8 @@ export const ENDPOINTS = {
   databases: {
     root: "/databases",
     byName: (dbName: string) => `/databases/${dbName}`,
+    export: (dbName: string) => `/databases/${dbName}/export`,
+    import: (dbName: string) => `/databases/${dbName}/import`,
   },
   collections: {
     root: (db: string) => `/databases/${db}/collections`,
