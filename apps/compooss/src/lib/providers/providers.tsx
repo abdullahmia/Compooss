@@ -1,5 +1,6 @@
 "use client";
 
+import { UpdateNotification } from "@/lib/components/common/update-notification.component";
 import "@/lib/config/monaco.config";
 import { queryClient } from "@/lib/config/query.config";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -17,6 +18,7 @@ export const Providers: React.FC<React.PropsWithChildren> = ({ children }) => {
           <ShellProvider>{children}</ShellProvider>
         </ConnectionProvider>
         <Toaster position="top-right" />
+        <UpdateNotification />
       </QueryClientProvider>
     </ThemeProvider>
   );

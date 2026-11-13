@@ -7,7 +7,8 @@
 
 /**
  * DOM event the desktop app dispatches for native menu actions; `detail` is the
- * action name (e.g. "close-tab"). Plain DOM events need no Tauri permissions.
+ * action name ("close-tab", "check-for-updates"). Plain DOM events need no
+ * Tauri permissions.
  */
 export const DESKTOP_ACTION_EVENT = "compooss:desktop";
 
@@ -29,8 +30,7 @@ export async function saveFile(name: string, data: Blob): Promise<void> {
         headers: { "x-file-name": encodeURIComponent(name) },
       });
     } catch (err) {
-      // Tauri rejects with the command's error string, not an Error.
-      throw new Error(typeof err === "string" ? err : `Could not save ${name}.`);
+      throw commandError(err, `Could not save ${name}.`);
     }
     return;
   }
@@ -43,4 +43,45 @@ export async function saveFile(name: string, data: Blob): Promise<void> {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(objectUrl);
+}
+
+/** A newer version of the desktop app, found by `checkForUpdate()`. */
+export type AppUpdate = { version: string; currentVersion: string };
+
+/** Reported by `installUpdate()`. `total` is null when the size isn't known. */
+export type UpdateProgress =
+  | { kind: "downloading"; downloaded: number; total: number | null }
+  | { kind: "installing" };
+
+/**
+ * Asks the desktop app whether a newer version was released. Resolves to null
+ * when it's up to date. Desktop only.
+ */
+export async function checkForUpdate(): Promise<AppUpdate | null> {
+  const { invoke } = await import("@tauri-apps/api/core");
+  try {
+    return await invoke<AppUpdate | null>("check_for_update");
+  } catch (err) {
+    throw commandError(err, "Could not check for updates.");
+  }
+}
+
+/**
+ * Downloads and installs the update `checkForUpdate()` found, then restarts
+ * the app. Desktop only.
+ */
+export async function installUpdate(
+  onProgress: (progress: UpdateProgress) => void,
+): Promise<void> {
+  const { Channel, invoke } = await import("@tauri-apps/api/core");
+  try {
+    await invoke("install_update", { onProgress: new Channel(onProgress) });
+  } catch (err) {
+    throw commandError(err, "Could not install the update.");
+  }
+}
+
+/** Tauri rejects with the command's error string, not an Error. */
+function commandError(err: unknown, fallback: string): Error {
+  return new Error(typeof err === "string" ? err : fallback);
 }

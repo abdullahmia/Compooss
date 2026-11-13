@@ -19,6 +19,9 @@ REPO_ROOT="$(cd "$DESKTOP_DIR/../.." && pwd)"
 RELEASE_DIR="$DESKTOP_DIR/release"
 LOG_DIR="$RELEASE_DIR/logs"
 MANIFEST_FILE=apps/docs/src/lib/constants/desktop-release.json
+# Signs the update packages; same as UPDATER_KEY_FILE in shared.ts.
+UPDATER_KEY_FILE="$HOME/.tauri/compooss.key"
+UPDATER_KEY_LABEL="~/.tauri/compooss.key"
 # rustup installs here, and it may not be on PATH yet.
 export PATH="$HOME/.cargo/bin:$PATH"
 
@@ -108,6 +111,9 @@ uncommitted_changes() { git -C "$REPO_ROOT" status --porcelain 2>/dev/null | wc 
 host_triple() { [[ $(uname -m) == arm64 ]] && echo aarch64-apple-darwin || echo x86_64-apple-darwin; }
 
 has() { command -v "$1" >/dev/null 2>&1; }
+
+# Release builds need it, so installed apps can update to them.
+has_updater_key() { [[ -n ${TAURI_SIGNING_PRIVATE_KEY:-} || -f $UPDATER_KEY_FILE ]]; }
 
 # Homebrew installs llvm and lld off PATH; build.ts finds them there.
 has_keg_tool() {
@@ -374,6 +380,7 @@ release_flow() {
   printf '    Platforms  %s\n' "$names"
   printf '    Output     %s\n\n' "$(relative "$RELEASE_DIR/$version")"
   tag_warning "$version"
+  has_updater_key || printf "  %s! There's no update signing key at %s, so the build will fail.%s\n" "$RED" "$UPDATER_KEY_LABEL" "$RESET"
   ((changes > 0)) && printf '  %s! %s uncommitted changes will be part of this build.%s\n' "$YELLOW" "$changes" "$RESET"
   [[ " ${PICKED[*]} " == *" 3 "* ]] && printf '  %s! Linux builds in Docker under emulation, which is the slow part.%s\n' "$YELLOW" "$RESET"
   printf '\n'
@@ -512,6 +519,8 @@ cmd_check() {
   check_tool "cargo-xwin" "$(cargo-xwin --version 2>/dev/null | awk '{print $2}')"
   check_tool "GitHub CLI" "$(gh auth status >/dev/null 2>&1 && echo "logged in")" \
     "$(has gh && echo "not logged in (gh auth login)" || echo "not found (brew install gh)")"
+  check_tool "Update key" "$(has_updater_key && echo "$UPDATER_KEY_LABEL")" \
+    "not found, release builds need it (docs/DESKTOP.md)"
   printf '\n  %sPlatforms this Mac can build%s\n' "$BOLD" "$RESET"
   for ((i = 0; i < ${#TRIPLES[@]}; i++)); do
     blocker=$(platform_blocker "$i")

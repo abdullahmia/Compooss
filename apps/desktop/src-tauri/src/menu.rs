@@ -1,9 +1,10 @@
 //! The macOS menu bar. Windows and Linux get none; the page handles Ctrl+W
-//! there (desktop-bridge.component.tsx).
+//! there (desktop-bridge.component.tsx) and has Check for Updates in its
+//! command palette.
 
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
-    AppHandle, Manager,
+    AppHandle, Manager, WebviewWindow,
 };
 use tauri_plugin_opener::OpenerExt;
 
@@ -25,6 +26,7 @@ pub fn install(app: &AppHandle) -> tauri::Result<()> {
                 true,
                 &[
                     &PredefinedMenuItem::about(app, None, None)?,
+                    &item("check-for-updates", "Check for Updates…", None)?,
                     &separator()?,
                     &PredefinedMenuItem::services(app, None)?,
                     &separator()?,
@@ -98,14 +100,10 @@ pub fn install(app: &AppHandle) -> tauri::Result<()> {
     app.on_menu_event(|app, event| {
         let window = app.get_webview_window("main");
         match event.id().as_ref() {
-            "close-tab" => {
-                if let Some(window) = window {
-                    // Handled by desktop-bridge.component.tsx.
-                    let _ = window.eval(
-                        "window.dispatchEvent(new CustomEvent('compooss:desktop', { detail: 'close-tab' }))",
-                    );
-                }
-            }
+            // Handled by desktop-bridge.component.tsx.
+            "close-tab" => send_to_page(window, "close-tab"),
+            // Handled by update-notification.component.tsx.
+            "check-for-updates" => send_to_page(window, "check-for-updates"),
             "close-window" => {
                 if let Some(window) = window {
                     let _ = window.close();
@@ -134,4 +132,14 @@ pub fn install(app: &AppHandle) -> tauri::Result<()> {
         }
     });
     Ok(())
+}
+
+/// Passes a menu action to the page as a `compooss:desktop` DOM event
+/// (DESKTOP_ACTION_EVENT in apps/compooss/src/lib/platform/platform.ts).
+fn send_to_page(window: Option<WebviewWindow>, action: &str) {
+    if let Some(window) = window {
+        let _ = window.eval(format!(
+            "window.dispatchEvent(new CustomEvent('compooss:desktop', {{ detail: '{action}' }}))"
+        ));
+    }
 }

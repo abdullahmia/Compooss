@@ -38,14 +38,27 @@ function reportWhenReady() {
 }
 
 // Next.js only logs a failed listen, so check the port first and report it.
-const probe = net.createServer();
-probe.once("error", (err) => {
-  console.log(`__COMPOOSS_ERROR__ ${err.code || err.message}`);
-  process.exit(1);
-});
-probe.listen(port, host, () => {
-  probe.close(() => {
-    require(path.join(__dirname, "apps", "compooss", "server.js"));
-    reportWhenReady();
+// After an update the app restarts right away, and the previous server may
+// still be exiting, so a busy port gets a few seconds to free up.
+const PORT_WAIT_MS = 5000;
+const startedAt = Date.now();
+
+function start() {
+  const probe = net.createServer();
+  probe.once("error", (err) => {
+    if (err.code === "EADDRINUSE" && Date.now() - startedAt < PORT_WAIT_MS) {
+      setTimeout(start, 200);
+      return;
+    }
+    console.log(`__COMPOOSS_ERROR__ ${err.code || err.message}`);
+    process.exit(1);
   });
-});
+  probe.listen(port, host, () => {
+    probe.close(() => {
+      require(path.join(__dirname, "apps", "compooss", "server.js"));
+      reportWhenReady();
+    });
+  });
+}
+
+start();
